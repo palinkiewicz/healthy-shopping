@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import pl.dakil.healthyshopping.ui.screens.DetailsScreen
 import pl.dakil.healthyshopping.ui.screens.MainScreen
+import pl.dakil.healthyshopping.ui.scanner.ScannerScreen
 import pl.dakil.healthyshopping.ui.viewmodel.MainViewModel
 
 @Composable
@@ -51,6 +52,22 @@ fun AppNavigation(viewModel: MainViewModel) {
                 onSearchClicked = { ean ->
                     viewModel.getProduct(ean)
                     navController.navigate("details")
+                },
+                onScanClicked = {
+                    navController.navigate("scanner")
+                }
+            )
+        }
+        composable("scanner") {
+            ScannerScreen(
+                onBarcodeDetected = { barcode ->
+                    // Automatically search when scanned
+                    navController.popBackStack("main", inclusive = false)
+                    viewModel.getProduct(barcode)
+                    navController.navigate("details")
+                },
+                onBackClicked = {
+                    navController.popBackStack()
                 }
             )
         }
