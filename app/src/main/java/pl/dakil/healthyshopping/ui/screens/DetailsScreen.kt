@@ -1,6 +1,7 @@
 package pl.dakil.healthyshopping.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -79,6 +80,58 @@ fun ProductDetailsContent(product: ProductResponse) {
             .padding(16.dp),
         horizontalAlignment = Alignment.Start
     ) {
+        // Unverified Alert Banner
+        product.unverifiedCell?.let { unverified ->
+            val isDarkTheme = isSystemInDarkTheme()
+            val parsedColor = try {
+                Color(android.graphics.Color.parseColor(unverified.color ?: "#FCF2E3"))
+            } catch (e: Exception) {
+                null
+            }
+            val bgColor = if (isDarkTheme) {
+                MaterialTheme.colorScheme.errorContainer
+            } else {
+                parsedColor ?: MaterialTheme.colorScheme.surfaceVariant
+            }
+            val textColor = if (isDarkTheme) MaterialTheme.colorScheme.onErrorContainer else Color.Black.copy(alpha = 0.8f)
+            val descColor = if (isDarkTheme) MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.7f)
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = bgColor)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = textColor
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = unverified.title ?: "Produkt dodany automatycznie",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = textColor
+                        )
+                        unverified.description?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = descColor,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // Product Header
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -247,34 +300,56 @@ fun ProductDetailsContent(product: ProductResponse) {
         
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Warning ingredients
+        // All ingredients with harmful level
         product.ingredients?.let { ingredients ->
-            val warnings = ingredients.filter { (it.harmfulLevel ?: 0) > 2 }
-            if (warnings.isNotEmpty()) {
+            if (ingredients.isNotEmpty()) {
                 Text(
-                    text = "Składniki do obiekcji",
+                    text = "Szkodliwość składników", // Name requested by user
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                warnings.forEach { warn ->
+                ingredients.forEach { ing ->
+                    val level = ing.harmfulLevel ?: 0
+                    val isDarkTheme = isSystemInDarkTheme()
+                    val badgeColor = when (level) {
+                        1 -> if (isDarkTheme) Color(0xFF2E5E3E) else Color(0xFFD9F6E4)
+                        2 -> if (isDarkTheme) Color(0xFF6B5811) else Color(0xFFFFF3C4)
+                        3 -> if (isDarkTheme) Color(0xFF7A4B1A) else Color(0xFFFEEDD9)
+                        4 -> if (isDarkTheme) Color(0xFF8B2C2C) else Color(0xFFFBE4E4)
+                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    }
+                    val badgeTextColor = if (isDarkTheme) Color.White else (if (level > 0) Color.Black.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant)
+                    
                     Row(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = warn.displayName ?: warn.name ?: "Nieznany",
+                            text = ing.displayName ?: ing.name ?: "Nieznany",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.weight(1f)
                         )
+                        
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .background(badgeColor, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = level.toString(),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = badgeTextColor
+                            )
+                        }
                     }
                 }
             }

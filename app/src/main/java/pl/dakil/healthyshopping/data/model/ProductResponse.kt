@@ -19,7 +19,7 @@ data class ProductResponse(
     val badgeImage: ImageInfo? = null,
     val healthyServing: HealthyServing? = null,
     val share: ShareInfo? = null,
-    val unverifiedCell: String? = null,
+    val unverifiedCell: UnverifiedCell? = null,
     val promotedManufacturerCell: String? = null,
     val viewAttributes: ViewAttributes? = null,
     val additionalTags: List<String>? = emptyList(),
@@ -124,4 +124,11 @@ data class Ingredient(
     val displayName: String? = null,
     val harmfulLevel: Int? = null,
     val url: String? = null
+)
+
+@Serializable
+data class UnverifiedCell(
+    val title: String? = null,
+    val description: String? = null,
+    val color: String? = null
 )

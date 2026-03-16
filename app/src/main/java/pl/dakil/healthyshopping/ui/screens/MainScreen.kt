@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -114,9 +115,8 @@ fun MainScreen(
                         }
                     }) {
                         Icon(
-                            painter = painterResource(android.R.drawable.ic_menu_camera),
-                            contentDescription = "Skanuj kod aparat",
-                            tint = MaterialTheme.colorScheme.primary
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = "Skanuj kod aparat"
                         )
                     }
                 },
