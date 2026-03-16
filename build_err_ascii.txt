@@ -1,4 +1,4 @@
-﻿> Task :app:preBuild UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
 > Task :app:preDebugBuild UP-TO-DATE
 > Task :app:checkDebugAarMetadata UP-TO-DATE
 > Task :app:generateDebugResValues UP-TO-DATE
@@ -16,21 +16,17 @@
 
 > Task :app:compileDebugKotlin FAILED
 .\gradlew.bat : e: file:///C:/Users/user/Documents/Healthy
-Shopping/app/src/main/java/pl/dakil/healthyshopping/data/n
-etwork/RetrofitClient.kt:4:26 Unresolved reference: 
-Companion
+Shopping/app/src/main/java/pl/dakil/healthyshopping/ui/sca
+nner/ScannerScreen.kt:136:33 Unresolved reference: padding
 At line:1 char:63
 + ... id\Android Studio\jbr"; .\gradlew.bat 
 compileDebugKotlin 2>&1 | Out-F ...
 +                             
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: (e: file:///C 
-   :/U...ence: Companion:String) [], RemoteException
+   :/U...erence: padding:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
-e: file:///C:/Users/user/Documents/HealthyShopping/app/src
-/main/java/pl/dakil/healthyshopping/data/network/RetrofitC
-lient.kt:20:73 Unresolved reference: toMediaType
 
 FAILURE: Build failed with an exception.
 
@@ -48,5 +44,5 @@ output.
 > Run with --scan to get full insights.
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 4s
+BUILD FAILED in 7s
 14 actionable tasks: 1 executed, 13 up-to-date
