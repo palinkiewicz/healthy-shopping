@@ -12,11 +12,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import pl.dakil.healthyshopping.ui.screens.DetailsScreen
 import pl.dakil.healthyshopping.ui.screens.MainScreen
+import pl.dakil.healthyshopping.ui.screens.SettingsScreen
 import pl.dakil.healthyshopping.ui.scanner.ScannerScreen
 import pl.dakil.healthyshopping.ui.viewmodel.MainViewModel
+import pl.dakil.healthyshopping.ui.viewmodel.SettingsViewModel
 
 @Composable
-fun AppNavigation(viewModel: MainViewModel) {
+fun AppNavigation(viewModel: MainViewModel, settingsViewModel: SettingsViewModel) {
     val navController = rememberNavController()
 
     NavHost(
@@ -55,7 +57,16 @@ fun AppNavigation(viewModel: MainViewModel) {
                 },
                 onScanClicked = {
                     navController.navigate("scanner")
+                },
+                onSettingsClicked = {
+                    navController.navigate("settings")
                 }
+            )
+        }
+        composable("settings") {
+            SettingsScreen(
+                viewModel = settingsViewModel,
+                onBackClicked = { navController.popBackStack() }
             )
         }
         composable("scanner") {
@@ -73,9 +84,13 @@ fun AppNavigation(viewModel: MainViewModel) {
         }
         composable("details") {
             val uiState by viewModel.uiState.collectAsState()
+            val showGroupedIngredients by settingsViewModel.showGroupedIngredients.collectAsState()
+            val showNutritionProgressBars by settingsViewModel.showNutritionProgressBars.collectAsState()
 
             DetailsScreen(
                 uiState = uiState,
+                showGroupedIngredients = showGroupedIngredients,
+                showNutritionProgressBars = showNutritionProgressBars,
                 onBackClicked = {
                     viewModel.resetState()
                     navController.popBackStack()

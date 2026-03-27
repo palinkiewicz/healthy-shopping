@@ -1,0 +1,45 @@
+package pl.dakil.healthyshopping.data.repository
+
+import android.content.Context
+import android.content.SharedPreferences
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+enum class ThemePreset {
+    SYSTEM, DYNAMIC, LIGHT, DARK, OLED, SEPIA, FOREST
+}
+
+class SettingsRepository(context: Context) {
+    private val prefs: SharedPreferences = context.getSharedPreferences("settings_prefs", Context.MODE_PRIVATE)
+
+    private val _themePreset = MutableStateFlow(
+        ThemePreset.valueOf(prefs.getString("theme_preset", ThemePreset.SYSTEM.name) ?: ThemePreset.SYSTEM.name)
+    )
+    val themePreset: StateFlow<ThemePreset> = _themePreset.asStateFlow()
+
+    private val _showGroupedIngredients = MutableStateFlow(
+        prefs.getBoolean("show_grouped_ingredients", false)
+    )
+    val showGroupedIngredients: StateFlow<Boolean> = _showGroupedIngredients.asStateFlow()
+
+    private val _showNutritionProgressBars = MutableStateFlow(
+        prefs.getBoolean("show_nutrition_progress_bars", true)
+    )
+    val showNutritionProgressBars: StateFlow<Boolean> = _showNutritionProgressBars.asStateFlow()
+
+    fun setThemePreset(preset: ThemePreset) {
+        prefs.edit().putString("theme_preset", preset.name).apply()
+        _themePreset.value = preset
+    }
+
+    fun setShowGroupedIngredients(enabled: Boolean) {
+        prefs.edit().putBoolean("show_grouped_ingredients", enabled).apply()
+        _showGroupedIngredients.value = enabled
+    }
+
+    fun setShowNutritionProgressBars(enabled: Boolean) {
+        prefs.edit().putBoolean("show_nutrition_progress_bars", enabled).apply()
+        _showNutritionProgressBars.value = enabled
+    }
+}

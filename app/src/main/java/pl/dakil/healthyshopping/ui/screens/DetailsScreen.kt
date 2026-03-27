@@ -12,7 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.scale
 import coil.compose.AsyncImage
 import pl.dakil.healthyshopping.data.model.ProductResponse
 import pl.dakil.healthyshopping.ui.viewmodel.ProductUiState
@@ -29,6 +30,8 @@ import pl.dakil.healthyshopping.ui.viewmodel.ProductUiState
 @Composable
 fun DetailsScreen(
     uiState: ProductUiState,
+    showGroupedIngredients: Boolean,
+    showNutritionProgressBars: Boolean,
     onBackClicked: () -> Unit,
     onRetry: () -> Unit
 ) {
@@ -61,7 +64,11 @@ fun DetailsScreen(
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
                 is ProductUiState.Success -> {
-                    ProductDetailsContent(uiState.product)
+                    ProductDetailsContent(
+                        product = uiState.product,
+                        showGroupedIngredients = showGroupedIngredients,
+                        showNutritionProgressBars = showNutritionProgressBars
+                    )
                 }
                 is ProductUiState.Error -> {
                     ErrorContent(uiState.message, onRetry)
@@ -72,7 +79,11 @@ fun DetailsScreen(
 }
 
 @Composable
-fun ProductDetailsContent(product: ProductResponse) {
+fun ProductDetailsContent(
+    product: ProductResponse,
+    showGroupedIngredients: Boolean,
+    showNutritionProgressBars: Boolean
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -231,7 +242,7 @@ fun ProductDetailsContent(product: ProductResponse) {
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                
+
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -239,21 +250,52 @@ fun ProductDetailsContent(product: ProductResponse) {
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         nutrients.forEach { nut ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = nut.name ?: "Nieznane",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Text(
-                                    text = "${nut.details?.value ?: "-"} ${nut.details?.unit ?: ""}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
+                            val nutName = nut.name ?: "Nieznane"
+                            val valStr = nut.details?.value ?: "0"
+                            val numVal = valStr.replace(Regex("[^0-9.,]"), "").replace(",", ".").toDoubleOrNull() ?: 0.0
+                            
+                            // Calculate RWS percentage and color
+                            val (rwsPercent, barColor) = calculateRws(nutName, numVal)
+
+                            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = nutName,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        text = "${nut.details?.value ?: "-"} ${nut.details?.unit ?: ""}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                
+                                if (showNutritionProgressBars) {
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        LinearProgressIndicator(
+                                            progress = rwsPercent,
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(6.dp)
+                                                .clip(RoundedCornerShape(3.dp)),
+                                            color = barColor,
+                                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "${(rwsPercent * 100).toInt()}%",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                            modifier = Modifier.width(32.dp),
+                                            textAlign = TextAlign.End
+                                        )
+                                    }
+                                }
                             }
                             if (nut != nutrients.last()) {
                                 HorizontalDivider(
@@ -304,51 +346,121 @@ fun ProductDetailsContent(product: ProductResponse) {
         product.ingredients?.let { ingredients ->
             if (ingredients.isNotEmpty()) {
                 Text(
-                    text = "Szkodliwość składników", // Name requested by user
+                    text = "Szkodliwość składników",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                ingredients.forEach { ing ->
-                    val level = ing.harmfulLevel ?: 0
-                    val isDarkTheme = isSystemInDarkTheme()
-                    val badgeColor = when (level) {
-                        1 -> if (isDarkTheme) Color(0xFF2E5E3E) else Color(0xFFD9F6E4)
-                        2 -> if (isDarkTheme) Color(0xFF6B5811) else Color(0xFFFFF3C4)
-                        3 -> if (isDarkTheme) Color(0xFF7A4B1A) else Color(0xFFFEEDD9)
-                        4 -> if (isDarkTheme) Color(0xFF8B2C2C) else Color(0xFFFBE4E4)
-                        else -> MaterialTheme.colorScheme.surfaceVariant
-                    }
-                    val badgeTextColor = if (isDarkTheme) Color.White else (if (level > 0) Color.Black.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant)
-                    
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = ing.displayName ?: ing.name ?: "Nieznany",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.weight(1f)
-                        )
+
+                if (showGroupedIngredients) {
+                    val grouped = ingredients.groupBy { it.harmfulLevel ?: 0 }.toSortedMap(reverseOrder())
+                    grouped.forEach { (level, list) ->
+                        val groupName = when(level) {
+                            4 -> "Bardzo wysoka szkodliwość"
+                            3 -> "Wysoka szkodliwość"
+                            2 -> "Średnia szkodliwość"
+                            1 -> "Niska szkodliwość"
+                            else -> "Brak danych / Naturalne"
+                        }
                         
-                        Box(
+                        val isDarkTheme = isSystemInDarkTheme()
+                        val headerBg = when (level) {
+                            1 -> if (isDarkTheme) Color(0xFF2E5E3E) else Color(0xFFD9F6E4)
+                            2 -> if (isDarkTheme) Color(0xFF6B5811) else Color(0xFFFFF3C4)
+                            3 -> if (isDarkTheme) Color(0xFF7A4B1A) else Color(0xFFFEEDD9)
+                            4 -> if (isDarkTheme) Color(0xFF8B2C2C) else Color(0xFFFBE4E4)
+                            else -> MaterialTheme.colorScheme.surfaceVariant
+                        }
+                        val headerTextColor = if (isDarkTheme) Color.White else (if (level > 0) Color.Black.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant)
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(headerBg)
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = groupName,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = headerTextColor
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .background(Color.Black.copy(alpha = 0.2f), CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = list.size.toString(),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = headerTextColor
+                                        )
+                                    }
+                                }
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    list.forEach { ing ->
+                                        Text(
+                                            text = "• ${ing.displayName ?: ing.name ?: "Nieznany"}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.padding(vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    ingredients.forEach { ing ->
+                        val level = ing.harmfulLevel ?: 0
+                        val isDarkTheme = isSystemInDarkTheme()
+                        val badgeColor = when (level) {
+                            1 -> if (isDarkTheme) Color(0xFF2E5E3E) else Color(0xFFD9F6E4)
+                            2 -> if (isDarkTheme) Color(0xFF6B5811) else Color(0xFFFFF3C4)
+                            3 -> if (isDarkTheme) Color(0xFF7A4B1A) else Color(0xFFFEEDD9)
+                            4 -> if (isDarkTheme) Color(0xFF8B2C2C) else Color(0xFFFBE4E4)
+                            else -> MaterialTheme.colorScheme.surfaceVariant
+                        }
+                        val badgeTextColor = if (isDarkTheme) Color.White else (if (level > 0) Color.Black.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant)
+                        
+                        Row(
                             modifier = Modifier
-                                .size(28.dp)
-                                .background(badgeColor, CircleShape),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = level.toString(),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = badgeTextColor
+                                text = ing.displayName ?: ing.name ?: "Nieznany",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.weight(1f)
                             )
+                            
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .background(badgeColor, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = level.toString(),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = badgeTextColor
+                                )
+                            }
                         }
                     }
                 }
@@ -387,4 +499,43 @@ fun ErrorContent(message: String, onRetry: () -> Unit) {
             Text("Spróbuj ponownie")
         }
     }
+}
+
+@Composable
+fun calculateRws(nutrientName: String, value: Double): Pair<Float, Color> {
+    // Reference values for an average adult (2000 kcal)
+    val rwsMap = mapOf(
+        "energetyczna" to 2000.0,
+        "energia" to 2000.0,
+        "tłuszcz" to 70.0,
+        "nasycone" to 20.0,
+        "węglowodany" to 260.0,
+        "cukry" to 90.0,
+        "białko" to 50.0,
+        "sól" to 6.0,
+        "błonnik" to 25.0
+    )
+
+    val lowerName = nutrientName.lowercase()
+    val rwsTarget = rwsMap.entries.firstOrNull { lowerName.contains(it.key) }?.value ?: return Pair(0f, MaterialTheme.colorScheme.primary)
+
+    val percentage = (value / rwsTarget).coerceIn(0.0, 1.0).toFloat()
+    
+    val isGoodNutrient = lowerName.contains("białko") || lowerName.contains("błonnik")
+    val isNeutral = lowerName.contains("energia") || lowerName.contains("węglowodany")
+    
+    val color = if (isGoodNutrient) {
+        Color(0xFF4CAF50) // Green
+    } else if (isNeutral) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        // Bad nutrients: fat, sugar, salt, saturated fat
+        when {
+            percentage < 0.33f -> Color(0xFF4CAF50) // Green
+            percentage < 0.66f -> Color(0xFFFFB300) // Yellow/Orange
+            else -> Color(0xFFE53935) // Red
+        }
+    }
+    
+    return Pair(percentage, color)
 }

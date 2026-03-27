@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,7 +31,8 @@ import androidx.core.content.ContextCompat
 @Composable
 fun MainScreen(
     onSearchClicked: (String) -> Unit,
-    onScanClicked: () -> Unit
+    onScanClicked: () -> Unit,
+    onSettingsClicked: () -> Unit
 ) {
     var ean by remember { mutableStateOf("") }
     val context = LocalContext.current
@@ -45,6 +47,22 @@ fun MainScreen(
     )
 
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { },
+                actions = {
+                    IconButton(onClick = onSettingsClicked) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Ustawienia"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
+            )
+        },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(

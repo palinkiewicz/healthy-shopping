@@ -57,21 +57,99 @@ private val LightColorScheme = lightColorScheme(
     onSurface = md_theme_light_onSurface,
 )
 
+private val OledColorScheme = darkColorScheme(
+    primary = md_theme_oled_primary,
+    onPrimary = md_theme_oled_onPrimary,
+    primaryContainer = md_theme_oled_primaryContainer,
+    onPrimaryContainer = md_theme_oled_onPrimaryContainer,
+    secondary = md_theme_oled_secondary,
+    onSecondary = md_theme_oled_onSecondary,
+    secondaryContainer = md_theme_oled_secondaryContainer,
+    onSecondaryContainer = md_theme_oled_onSecondaryContainer,
+    tertiary = md_theme_oled_tertiary,
+    onTertiary = md_theme_oled_onTertiary,
+    tertiaryContainer = md_theme_oled_tertiaryContainer,
+    onTertiaryContainer = md_theme_oled_onTertiaryContainer,
+    error = md_theme_oled_error,
+    errorContainer = md_theme_oled_errorContainer,
+    onError = md_theme_oled_onError,
+    onErrorContainer = md_theme_oled_onErrorContainer,
+    background = md_theme_oled_background,
+    onBackground = md_theme_oled_onBackground,
+    surface = md_theme_oled_surface,
+    onSurface = md_theme_oled_onSurface,
+)
+
+private val SepiaColorScheme = lightColorScheme(
+    primary = md_theme_sepia_primary,
+    onPrimary = md_theme_sepia_onPrimary,
+    primaryContainer = md_theme_sepia_primaryContainer,
+    onPrimaryContainer = md_theme_sepia_onPrimaryContainer,
+    secondary = md_theme_sepia_secondary,
+    onSecondary = md_theme_sepia_onSecondary,
+    secondaryContainer = md_theme_sepia_secondaryContainer,
+    onSecondaryContainer = md_theme_sepia_onSecondaryContainer,
+    tertiary = md_theme_sepia_tertiary,
+    onTertiary = md_theme_sepia_onTertiary,
+    tertiaryContainer = md_theme_sepia_tertiaryContainer,
+    onTertiaryContainer = md_theme_sepia_onTertiaryContainer,
+    error = md_theme_sepia_error,
+    errorContainer = md_theme_sepia_errorContainer,
+    onError = md_theme_sepia_onError,
+    onErrorContainer = md_theme_sepia_onErrorContainer,
+    background = md_theme_sepia_background,
+    onBackground = md_theme_sepia_onBackground,
+    surface = md_theme_sepia_surface,
+    onSurface = md_theme_sepia_onSurface,
+)
+
+private val ForestColorScheme = darkColorScheme(
+    primary = md_theme_forest_primary,
+    onPrimary = md_theme_forest_onPrimary,
+    primaryContainer = md_theme_forest_primaryContainer,
+    onPrimaryContainer = md_theme_forest_onPrimaryContainer,
+    secondary = md_theme_forest_secondary,
+    onSecondary = md_theme_forest_onSecondary,
+    secondaryContainer = md_theme_forest_secondaryContainer,
+    onSecondaryContainer = md_theme_forest_onSecondaryContainer,
+    tertiary = md_theme_forest_tertiary,
+    onTertiary = md_theme_forest_onTertiary,
+    tertiaryContainer = md_theme_forest_tertiaryContainer,
+    onTertiaryContainer = md_theme_forest_onTertiaryContainer,
+    error = md_theme_forest_error,
+    errorContainer = md_theme_forest_errorContainer,
+    onError = md_theme_forest_onError,
+    onErrorContainer = md_theme_forest_onErrorContainer,
+    background = md_theme_forest_background,
+    onBackground = md_theme_forest_onBackground,
+    surface = md_theme_forest_surface,
+    onSurface = md_theme_forest_onSurface,
+)
+
 @Composable
 fun HealthyShoppingTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    themePreset: pl.dakil.healthyshopping.data.repository.ThemePreset = pl.dakil.healthyshopping.data.repository.ThemePreset.SYSTEM,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    val isSystemDark = isSystemInDarkTheme()
+    
+    val colorScheme = when (themePreset) {
+        pl.dakil.healthyshopping.data.repository.ThemePreset.DYNAMIC -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val context = LocalContext.current
+                if (isSystemDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            } else {
+                if (isSystemDark) DarkColorScheme else LightColorScheme
+            }
         }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        pl.dakil.healthyshopping.data.repository.ThemePreset.SYSTEM -> {
+            if (isSystemDark) DarkColorScheme else LightColorScheme
+        }
+        pl.dakil.healthyshopping.data.repository.ThemePreset.LIGHT -> LightColorScheme
+        pl.dakil.healthyshopping.data.repository.ThemePreset.DARK -> DarkColorScheme
+        pl.dakil.healthyshopping.data.repository.ThemePreset.OLED -> OledColorScheme
+        pl.dakil.healthyshopping.data.repository.ThemePreset.SEPIA -> SepiaColorScheme
+        pl.dakil.healthyshopping.data.repository.ThemePreset.FOREST -> ForestColorScheme
     }
 
     MaterialTheme(
