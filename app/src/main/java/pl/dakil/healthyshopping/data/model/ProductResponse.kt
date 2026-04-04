@@ -114,7 +114,13 @@ data class IngredientPhrase(
 
 @Serializable
 data class Recommendation(
-    val topProduct: String? = null
+    val topProduct: TopProduct? = null
+)
+
+@Serializable
+data class TopProduct(
+    val percent: Int? = null,
+    val deeplink: String? = null
 )
 
 @Serializable
