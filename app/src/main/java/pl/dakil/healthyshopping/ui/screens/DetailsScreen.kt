@@ -219,7 +219,7 @@ fun ProductDetailsContent(
         // Health Score Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Row(
@@ -322,7 +322,7 @@ fun ProductDetailsContent(
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -397,7 +397,7 @@ fun ProductDetailsContent(
         
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -410,7 +410,7 @@ fun ProductDetailsContent(
                 } else {
                     if (showHighlightedIngredients && !product.ingredientPhrases.isNullOrEmpty()) {
                         val isDarkTheme = isSystemInDarkTheme()
-                        val highlightAlpha = if (isDarkTheme) 0.5f else 0.7f
+                        val highlightAlpha = if (isDarkTheme) 0.3f else 0.9f
                         
                         val annotatedText = buildAnnotatedString {
                             val desc = product.description
