@@ -13,6 +13,8 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
     val showNutritionProgressBars: StateFlow<Boolean> = repository.showNutritionProgressBars
 
+    val showHighlightedIngredients: StateFlow<Boolean> = repository.showHighlightedIngredients
+
     fun setThemePreset(preset: ThemePreset) {
         repository.setThemePreset(preset)
     }
@@ -23,5 +25,9 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
     fun setShowNutritionProgressBars(enabled: Boolean) {
         repository.setShowNutritionProgressBars(enabled)
+    }
+
+    fun setShowHighlightedIngredients(enabled: Boolean) {
+        repository.setShowHighlightedIngredients(enabled)
     }
 }

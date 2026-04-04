@@ -86,11 +86,13 @@ fun AppNavigation(viewModel: MainViewModel, settingsViewModel: SettingsViewModel
             val uiState by viewModel.uiState.collectAsState()
             val showGroupedIngredients by settingsViewModel.showGroupedIngredients.collectAsState()
             val showNutritionProgressBars by settingsViewModel.showNutritionProgressBars.collectAsState()
+            val showHighlightedIngredients by settingsViewModel.showHighlightedIngredients.collectAsState()
 
             DetailsScreen(
                 uiState = uiState,
                 showGroupedIngredients = showGroupedIngredients,
                 showNutritionProgressBars = showNutritionProgressBars,
+                showHighlightedIngredients = showHighlightedIngredients,
                 onBackClicked = {
                     viewModel.resetState()
                     navController.popBackStack()

@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.scale
 import coil.compose.AsyncImage
@@ -32,6 +34,7 @@ fun DetailsScreen(
     uiState: ProductUiState,
     showGroupedIngredients: Boolean,
     showNutritionProgressBars: Boolean,
+    showHighlightedIngredients: Boolean,
     onBackClicked: () -> Unit,
     onRetry: () -> Unit
 ) {
@@ -67,7 +70,8 @@ fun DetailsScreen(
                     ProductDetailsContent(
                         product = uiState.product,
                         showGroupedIngredients = showGroupedIngredients,
-                        showNutritionProgressBars = showNutritionProgressBars
+                        showNutritionProgressBars = showNutritionProgressBars,
+                        showHighlightedIngredients = showHighlightedIngredients
                     )
                 }
                 is ProductUiState.Error -> {
@@ -82,7 +86,8 @@ fun DetailsScreen(
 fun ProductDetailsContent(
     product: ProductResponse,
     showGroupedIngredients: Boolean,
-    showNutritionProgressBars: Boolean
+    showNutritionProgressBars: Boolean,
+    showHighlightedIngredients: Boolean
 ) {
     Column(
         modifier = Modifier
@@ -331,11 +336,49 @@ fun ProductDetailsContent(
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                 } else {
-                    Text(
-                        text = product.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    if (showHighlightedIngredients && !product.ingredientPhrases.isNullOrEmpty()) {
+                        val isDarkTheme = isSystemInDarkTheme()
+                        val highlightAlpha = if (isDarkTheme) 0.5f else 0.7f
+                        
+                        val annotatedText = buildAnnotatedString {
+                            val desc = product.description
+                            append(desc)
+                            
+                            product.ingredientPhrases.forEach { phraseInfo ->
+                                val phrase = phraseInfo.phrase ?: return@forEach
+                                val colorHex = phraseInfo.backgroundColor ?: return@forEach
+                                
+                                val bgColor = try {
+                                    Color(android.graphics.Color.parseColor(colorHex)).copy(alpha = highlightAlpha)
+                                } catch (e: Exception) {
+                                    Color.Transparent
+                                }
+                                
+                                var startIndex = desc.indexOf(phrase, ignoreCase = true)
+                                while (startIndex >= 0) {
+                                    val endIndex = startIndex + phrase.length
+                                    addStyle(
+                                        style = SpanStyle(background = bgColor),
+                                        start = startIndex,
+                                        end = endIndex
+                                    )
+                                    startIndex = desc.indexOf(phrase, startIndex + phrase.length, ignoreCase = true)
+                                }
+                            }
+                        }
+                        
+                        Text(
+                            text = annotatedText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        Text(
+                            text = product.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }
@@ -356,6 +399,7 @@ fun ProductDetailsContent(
                     val grouped = ingredients.groupBy { it.harmfulLevel ?: 0 }.toSortedMap(reverseOrder())
                     grouped.forEach { (level, list) ->
                         val groupName = when(level) {
+                            5 -> "Ogromna szkodliwość"
                             4 -> "Bardzo wysoka szkodliwość"
                             3 -> "Wysoka szkodliwość"
                             2 -> "Średnia szkodliwość"
@@ -369,6 +413,7 @@ fun ProductDetailsContent(
                             2 -> if (isDarkTheme) Color(0xFF6B5811) else Color(0xFFFFF3C4)
                             3 -> if (isDarkTheme) Color(0xFF7A4B1A) else Color(0xFFFEEDD9)
                             4 -> if (isDarkTheme) Color(0xFF8B2C2C) else Color(0xFFFBE4E4)
+                            5 -> if (isDarkTheme) Color(0xFF5A0000) else Color(0xFFFF8A8A)
                             else -> MaterialTheme.colorScheme.surfaceVariant
                         }
                         val headerTextColor = if (isDarkTheme) Color.White else (if (level > 0) Color.Black.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant)
@@ -428,6 +473,7 @@ fun ProductDetailsContent(
                             2 -> if (isDarkTheme) Color(0xFF6B5811) else Color(0xFFFFF3C4)
                             3 -> if (isDarkTheme) Color(0xFF7A4B1A) else Color(0xFFFEEDD9)
                             4 -> if (isDarkTheme) Color(0xFF8B2C2C) else Color(0xFFFBE4E4)
+                            5 -> if (isDarkTheme) Color(0xFF5A0000) else Color(0xFFFF8A8A)
                             else -> MaterialTheme.colorScheme.surfaceVariant
                         }
                         val badgeTextColor = if (isDarkTheme) Color.White else (if (level > 0) Color.Black.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant)

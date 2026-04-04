@@ -32,6 +32,7 @@ fun SettingsScreen(
     val themePreset by viewModel.themePreset.collectAsState()
     val showGroupedIngredients by viewModel.showGroupedIngredients.collectAsState()
     val showNutritionProgressBars by viewModel.showNutritionProgressBars.collectAsState()
+    val showHighlightedIngredients by viewModel.showHighlightedIngredients.collectAsState()
     var showThemeDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -82,6 +83,13 @@ fun SettingsScreen(
                 subtitle = "Wyświetlaj procent dziennego zapotrzebowania przy tabeli wartości odżywczych na 100g.",
                 checked = showNutritionProgressBars,
                 onCheckedChange = { viewModel.setShowNutritionProgressBars(it) }
+            )
+
+            SettingsItemSwitch(
+                title = "Podświetl kluczowe składniki",
+                subtitle = "Wyróżnij wybrane składniki w pełnym opisie produktu.",
+                checked = showHighlightedIngredients,
+                onCheckedChange = { viewModel.setShowHighlightedIngredients(it) }
             )
         }
     }

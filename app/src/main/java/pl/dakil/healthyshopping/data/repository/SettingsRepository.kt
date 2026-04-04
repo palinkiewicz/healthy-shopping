@@ -28,6 +28,11 @@ class SettingsRepository(context: Context) {
     )
     val showNutritionProgressBars: StateFlow<Boolean> = _showNutritionProgressBars.asStateFlow()
 
+    private val _showHighlightedIngredients = MutableStateFlow(
+        prefs.getBoolean("show_highlighted_ingredients", true)
+    )
+    val showHighlightedIngredients: StateFlow<Boolean> = _showHighlightedIngredients.asStateFlow()
+
     fun setThemePreset(preset: ThemePreset) {
         prefs.edit().putString("theme_preset", preset.name).apply()
         _themePreset.value = preset
@@ -41,5 +46,10 @@ class SettingsRepository(context: Context) {
     fun setShowNutritionProgressBars(enabled: Boolean) {
         prefs.edit().putBoolean("show_nutrition_progress_bars", enabled).apply()
         _showNutritionProgressBars.value = enabled
+    }
+
+    fun setShowHighlightedIngredients(enabled: Boolean) {
+        prefs.edit().putBoolean("show_highlighted_ingredients", enabled).apply()
+        _showHighlightedIngredients.value = enabled
     }
 }
