@@ -31,8 +31,7 @@ import androidx.core.content.ContextCompat
 @Composable
 fun MainScreen(
     onSearchClicked: (String) -> Unit,
-    onScanClicked: () -> Unit,
-    onSettingsClicked: () -> Unit
+    onScanClicked: () -> Unit
 ) {
     var ean by remember { mutableStateOf("") }
     val context = LocalContext.current
@@ -47,22 +46,6 @@ fun MainScreen(
     )
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { },
-                actions = {
-                    IconButton(onClick = onSettingsClicked) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Ustawienia"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
-            )
-        },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(

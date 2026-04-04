@@ -15,6 +15,7 @@ import pl.dakil.healthyshopping.data.repository.SettingsRepository
 import pl.dakil.healthyshopping.ui.navigation.AppNavigation
 import pl.dakil.healthyshopping.ui.theme.HealthyShoppingTheme
 import pl.dakil.healthyshopping.ui.viewmodel.MainViewModel
+import pl.dakil.healthyshopping.ui.viewmodel.SearchViewModel
 import pl.dakil.healthyshopping.ui.viewmodel.SettingsViewModel
 
 class MainActivity : ComponentActivity() {
@@ -39,6 +40,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val searchViewModel: SearchViewModel by viewModels {
+        object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                val repository = ProductRepository(RetrofitClient.apiService)
+                @Suppress("UNCHECKED_CAST")
+                return SearchViewModel(repository) as T
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -48,7 +59,11 @@ class MainActivity : ComponentActivity() {
             HealthyShoppingTheme(
                 themePreset = themePreset
             ) {
-                AppNavigation(viewModel = viewModel, settingsViewModel = settingsViewModel)
+                AppNavigation(
+                    viewModel = viewModel,
+                    settingsViewModel = settingsViewModel,
+                    searchViewModel = searchViewModel
+                )
             }
         }
     }
