@@ -291,6 +291,7 @@ fun ProductDetailsContent(
                                 "not_recommended_for_overweight_people" -> Triple("Szkodliwe dla osób z nadwagą", tagRedBg, tagRedText)
                                 "not_recommended_for_people_with_high_cholesterol" -> Triple("Szkodliwe dla osób z wysokim cholesterolem", tagRedBg, tagRedText)
                                 "not_recommended_for_people_with_diabetes" -> Triple("Szkodliwe dla cukrzyków", tagRedBg, tagRedText)
+                                "not_recommended_for_people_with_hypertension" -> Triple("Szkodliwe dla osób z nadciśnieniem", tagRedBg, tagRedText)
                                 else -> Triple(tag, tagNeutralBg, tagNeutralText)
                             }
 
