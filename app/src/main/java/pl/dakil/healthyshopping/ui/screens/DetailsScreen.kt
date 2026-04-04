@@ -5,11 +5,16 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -35,16 +40,36 @@ fun DetailsScreen(
     showGroupedIngredients: Boolean,
     showNutritionProgressBars: Boolean,
     showHighlightedIngredients: Boolean,
+    showProductTags: Boolean,
     onBackClicked: () -> Unit,
     onRetry: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Wynik Analizy") },
+                title = { Text("Analiza produktu") },
                 navigationIcon = {
                     IconButton(onClick = onBackClicked) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wróć")
+                    }
+                },
+                actions = {
+                    val context = LocalContext.current
+                    if (uiState is ProductUiState.Success) {
+                        val shareText = uiState.product.share?.shareText
+                        if (shareText != null) {
+                            IconButton(onClick = {
+                                val sendIntent: Intent = Intent().apply {
+                                    action = Intent.ACTION_SEND
+                                    putExtra(Intent.EXTRA_TEXT, shareText)
+                                    type = "text/plain"
+                                }
+                                val shareIntent = Intent.createChooser(sendIntent, null)
+                                context.startActivity(shareIntent)
+                            }) {
+                                Icon(Icons.Default.Share, contentDescription = "Udostępnij")
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -71,7 +96,8 @@ fun DetailsScreen(
                         product = uiState.product,
                         showGroupedIngredients = showGroupedIngredients,
                         showNutritionProgressBars = showNutritionProgressBars,
-                        showHighlightedIngredients = showHighlightedIngredients
+                        showHighlightedIngredients = showHighlightedIngredients,
+                        showProductTags = showProductTags
                     )
                 }
                 is ProductUiState.Error -> {
@@ -82,12 +108,14 @@ fun DetailsScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProductDetailsContent(
     product: ProductResponse,
     showGroupedIngredients: Boolean,
     showNutritionProgressBars: Boolean,
-    showHighlightedIngredients: Boolean
+    showHighlightedIngredients: Boolean,
+    showProductTags: Boolean
 ) {
     Column(
         modifier = Modifier
@@ -237,6 +265,50 @@ fun ProductDetailsContent(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        // Tags
+        if (showProductTags) {
+            product.tags?.let { tags ->
+                if (tags.isNotEmpty()) {
+                    val isDarkTheme = isSystemInDarkTheme()
+                    val tagGreenBg = if (isDarkTheme) Color(0xFF2E5E3E) else Color(0xFFD9F6E4)
+                    val tagRedBg = if (isDarkTheme) Color(0xFF5A0000) else Color(0xFFFF8A8A)
+                    val tagGreenText = if (isDarkTheme) Color.White else Color.Black.copy(alpha = 0.8f)
+                    val tagRedText = if (isDarkTheme) Color.White else Color.Black.copy(alpha = 0.8f)
+                    val tagNeutralBg = MaterialTheme.colorScheme.surfaceVariant
+                    val tagNeutralText = MaterialTheme.colorScheme.onSurfaceVariant
+                    
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        tags.forEach { tag ->
+                            val (tagName, chipBg, chipText) = when (tag) {
+                                "no_sugar_added" -> Triple("Brak dodanego cukru", tagGreenBg, tagGreenText)
+                                "high_fiber" -> Triple("Wysoka zawartość błonnika", tagGreenBg, tagGreenText)
+                                "high_protein" -> Triple("Wysoka zawartość białka", tagGreenBg, tagGreenText)
+                                "not_recommended_for_overweight_people" -> Triple("Szkodliwe dla osób z nadwagą", tagRedBg, tagRedText)
+                                "not_recommended_for_people_with_high_cholesterol" -> Triple("Szkodliwe dla osób z wysokim cholesterolem", tagRedBg, tagRedText)
+                                "not_recommended_for_people_with_diabetes" -> Triple("Szkodliwe dla cukrzyków", tagRedBg, tagRedText)
+                                else -> Triple(tag, tagNeutralBg, tagNeutralText)
+                            }
+
+                            AssistChip(
+                                onClick = { },
+                                label = { Text(tagName, color = chipText) },
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = chipBg,
+                                    labelColor = chipText
+                                ),
+                                border = null,
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
         // Macronutrients
         product.nutrientValues?.nutrients?.let { nutrients ->
@@ -399,12 +471,12 @@ fun ProductDetailsContent(
                     val grouped = ingredients.groupBy { it.harmfulLevel ?: 0 }.toSortedMap(reverseOrder())
                     grouped.forEach { (level, list) ->
                         val groupName = when(level) {
-                            5 -> "Ogromna szkodliwość"
-                            4 -> "Bardzo wysoka szkodliwość"
-                            3 -> "Wysoka szkodliwość"
-                            2 -> "Średnia szkodliwość"
-                            1 -> "Niska szkodliwość"
-                            else -> "Brak danych / Naturalne"
+                            5 -> "Bardzo szkodliwe"
+                            4 -> "Szkodliwe"
+                            3 -> "Podejrzane"
+                            2 -> "Neutralne"
+                            1 -> "Korzystne"
+                            else -> "Brak danych"
                         }
                         
                         val isDarkTheme = isSystemInDarkTheme()
@@ -512,7 +584,7 @@ fun ProductDetailsContent(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
@@ -553,6 +625,7 @@ fun calculateRws(nutrientName: String, value: Double): Pair<Float, Color> {
     val rwsMap = mapOf(
         "energetyczna" to 2000.0,
         "energia" to 2000.0,
+        "kalorie" to 2000.0,
         "tłuszcz" to 70.0,
         "nasycone" to 20.0,
         "węglowodany" to 260.0,
@@ -568,7 +641,7 @@ fun calculateRws(nutrientName: String, value: Double): Pair<Float, Color> {
     val percentage = (value / rwsTarget).coerceIn(0.0, 1.0).toFloat()
     
     val isGoodNutrient = lowerName.contains("białko") || lowerName.contains("błonnik")
-    val isNeutral = lowerName.contains("energia") || lowerName.contains("węglowodany")
+    val isNeutral = lowerName.contains("energia") || lowerName.contains("kalorie") || lowerName.contains("węglowodany")
     
     val color = if (isGoodNutrient) {
         Color(0xFF4CAF50) // Green

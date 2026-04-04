@@ -33,6 +33,11 @@ class SettingsRepository(context: Context) {
     )
     val showHighlightedIngredients: StateFlow<Boolean> = _showHighlightedIngredients.asStateFlow()
 
+    private val _showProductTags = MutableStateFlow(
+        prefs.getBoolean("show_product_tags", true)
+    )
+    val showProductTags: StateFlow<Boolean> = _showProductTags.asStateFlow()
+
     fun setThemePreset(preset: ThemePreset) {
         prefs.edit().putString("theme_preset", preset.name).apply()
         _themePreset.value = preset
@@ -51,5 +56,10 @@ class SettingsRepository(context: Context) {
     fun setShowHighlightedIngredients(enabled: Boolean) {
         prefs.edit().putBoolean("show_highlighted_ingredients", enabled).apply()
         _showHighlightedIngredients.value = enabled
+    }
+
+    fun setShowProductTags(enabled: Boolean) {
+        prefs.edit().putBoolean("show_product_tags", enabled).apply()
+        _showProductTags.value = enabled
     }
 }

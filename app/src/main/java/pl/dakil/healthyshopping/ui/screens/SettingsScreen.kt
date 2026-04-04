@@ -33,6 +33,7 @@ fun SettingsScreen(
     val showGroupedIngredients by viewModel.showGroupedIngredients.collectAsState()
     val showNutritionProgressBars by viewModel.showNutritionProgressBars.collectAsState()
     val showHighlightedIngredients by viewModel.showHighlightedIngredients.collectAsState()
+    val showProductTags by viewModel.showProductTags.collectAsState()
     var showThemeDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -90,6 +91,13 @@ fun SettingsScreen(
                 subtitle = "Wyróżnij wybrane składniki w pełnym opisie produktu.",
                 checked = showHighlightedIngredients,
                 onCheckedChange = { viewModel.setShowHighlightedIngredients(it) }
+            )
+
+            SettingsItemSwitch(
+                title = "Wyświetlaj tagi produktów",
+                subtitle = "Pokazuj specjalne etykiety pod wynikiem zdrowotnym.",
+                checked = showProductTags,
+                onCheckedChange = { viewModel.setShowProductTags(it) }
             )
         }
     }

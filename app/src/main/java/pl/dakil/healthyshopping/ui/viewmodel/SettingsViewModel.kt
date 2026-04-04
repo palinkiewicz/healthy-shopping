@@ -15,6 +15,8 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
     val showHighlightedIngredients: StateFlow<Boolean> = repository.showHighlightedIngredients
 
+    val showProductTags: StateFlow<Boolean> = repository.showProductTags
+
     fun setThemePreset(preset: ThemePreset) {
         repository.setThemePreset(preset)
     }
@@ -29,5 +31,9 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
     fun setShowHighlightedIngredients(enabled: Boolean) {
         repository.setShowHighlightedIngredients(enabled)
+    }
+
+    fun setShowProductTags(enabled: Boolean) {
+        repository.setShowProductTags(enabled)
     }
 }
