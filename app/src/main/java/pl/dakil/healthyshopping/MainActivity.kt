@@ -17,15 +17,18 @@ import pl.dakil.healthyshopping.ui.theme.HealthyShoppingTheme
 import pl.dakil.healthyshopping.ui.viewmodel.MainViewModel
 import pl.dakil.healthyshopping.ui.viewmodel.SearchViewModel
 import pl.dakil.healthyshopping.ui.viewmodel.SettingsViewModel
+import pl.dakil.healthyshopping.ui.viewmodel.ComparisonViewModel
 
 class MainActivity : ComponentActivity() {
+
+    private val productRepository by lazy { ProductRepository(RetrofitClient.apiService) }
+    private val settingsRepository by lazy { SettingsRepository(applicationContext) }
 
     private val viewModel: MainViewModel by viewModels {
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val repository = ProductRepository(RetrofitClient.apiService)
                 @Suppress("UNCHECKED_CAST")
-                return MainViewModel(repository) as T
+                return MainViewModel(productRepository) as T
             }
         }
     }
@@ -33,9 +36,8 @@ class MainActivity : ComponentActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels {
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val repository = SettingsRepository(applicationContext)
                 @Suppress("UNCHECKED_CAST")
-                return SettingsViewModel(repository) as T
+                return SettingsViewModel(settingsRepository) as T
             }
         }
     }
@@ -43,9 +45,17 @@ class MainActivity : ComponentActivity() {
     private val searchViewModel: SearchViewModel by viewModels {
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val repository = ProductRepository(RetrofitClient.apiService)
                 @Suppress("UNCHECKED_CAST")
-                return SearchViewModel(repository) as T
+                return SearchViewModel(productRepository) as T
+            }
+        }
+    }
+
+    private val comparisonViewModel: ComparisonViewModel by viewModels {
+        object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                @Suppress("UNCHECKED_CAST")
+                return ComparisonViewModel(productRepository, settingsRepository) as T
             }
         }
     }
@@ -62,7 +72,8 @@ class MainActivity : ComponentActivity() {
                 AppNavigation(
                     viewModel = viewModel,
                     settingsViewModel = settingsViewModel,
-                    searchViewModel = searchViewModel
+                    searchViewModel = searchViewModel,
+                    comparisonViewModel = comparisonViewModel
                 )
             }
         }

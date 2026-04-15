@@ -16,6 +16,7 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
     val showHighlightedIngredients: StateFlow<Boolean> = repository.showHighlightedIngredients
 
     val showProductTags: StateFlow<Boolean> = repository.showProductTags
+    val comparisonEans: StateFlow<Set<String>> = repository.comparisonEans
 
     fun setThemePreset(preset: ThemePreset) {
         repository.setThemePreset(preset)
@@ -35,5 +36,17 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
     fun setShowProductTags(enabled: Boolean) {
         repository.setShowProductTags(enabled)
+    }
+
+    fun addToComparison(ean: String) {
+        repository.addToComparison(ean)
+    }
+
+    fun removeFromComparison(ean: String) {
+        repository.removeFromComparison(ean)
+    }
+
+    fun clearComparison() {
+        repository.clearComparison()
     }
 }

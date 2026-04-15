@@ -29,10 +29,11 @@ class SearchViewModel(private val repository: ProductRepository) : ViewModel() {
                 .debounce(350)
                 .distinctUntilChanged()
                 .collect { query ->
-                    if (query.trim().isEmpty()) {
+                    val trimmed = query.trim()
+                    if (trimmed.length < 3) {
                         _uiState.value = SearchUiState.Idle
                     } else {
-                        performSearch(query.trim())
+                        performSearch(trimmed)
                     }
                 }
         }
