@@ -10,6 +10,12 @@ import androidx.compose.runtime.getValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
+import androidx.navigation.NavType
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import android.app.Activity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
@@ -30,6 +36,7 @@ import pl.dakil.healthyshopping.ui.viewmodel.MainViewModel
 import pl.dakil.healthyshopping.ui.viewmodel.SettingsViewModel
 
 import pl.dakil.healthyshopping.ui.viewmodel.SearchViewModel
+import pl.dakil.healthyshopping.ui.viewmodel.ProductUiState
 
 sealed class BottomNavItem(var title: String, var icon: androidx.compose.ui.graphics.vector.ImageVector, var route: String) {
     data object Main : BottomNavItem("Główna", Icons.Default.Home, "main")
@@ -138,8 +145,7 @@ fun AppNavigation(
             Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
                 MainScreen(
                     onSearchClicked = { ean ->
-                        viewModel.getProduct(ean)
-                        navController.navigate("details")
+                        navController.navigate("details/$ean")
                     },
                     onScanClicked = {
                         navController.navigate("scanner")
@@ -152,8 +158,7 @@ fun AppNavigation(
                 SearchScreen(
                     viewModel = searchViewModel,
                     onProductClicked = { ean ->
-                        viewModel.getProduct(ean)
-                        navController.navigate("details")
+                        navController.navigate("details/$ean")
                     }
                 )
             }
@@ -171,20 +176,35 @@ fun AppNavigation(
                 onBarcodeDetected = { barcode ->
                     // Automatically search when scanned
                     navController.popBackStack("main", inclusive = false)
-                    viewModel.getProduct(barcode)
-                    navController.navigate("details")
+                    navController.navigate("details/$barcode")
                 },
                 onBackClicked = {
                     navController.popBackStack()
                 }
             )
         }
-        composable("details") {
+        composable(
+            route = "details/{ean}",
+            arguments = listOf(navArgument("ean") { type = NavType.StringType }),
+            deepLinks = listOf(navDeepLink { uriPattern = "https://zdrowezakupy.org/product/{ean}" })
+        ) { backStackEntry ->
+            val ean = backStackEntry.arguments?.getString("ean") ?: ""
             val uiState by viewModel.uiState.collectAsState()
             val showGroupedIngredients by settingsViewModel.showGroupedIngredients.collectAsState()
             val showNutritionProgressBars by settingsViewModel.showNutritionProgressBars.collectAsState()
             val showHighlightedIngredients by settingsViewModel.showHighlightedIngredients.collectAsState()
             val showProductTags by settingsViewModel.showProductTags.collectAsState()
+
+            LaunchedEffect(ean) {
+                if (ean.isNotBlank()) {
+                    val currentState = viewModel.uiState.value
+                    if (currentState !is ProductUiState.Success || currentState.product.ean != ean) {
+                        viewModel.getProduct(ean)
+                    }
+                }
+            }
+
+            val context = LocalContext.current
 
             DetailsScreen(
                 uiState = uiState,
@@ -193,13 +213,26 @@ fun AppNavigation(
                 showHighlightedIngredients = showHighlightedIngredients,
                 showProductTags = showProductTags,
                 onBackClicked = {
+                    val hasPrevious = navController.previousBackStackEntry != null
                     viewModel.resetState()
-                    navController.popBackStack()
+                    if (hasPrevious) {
+                        navController.popBackStack()
+                    } else {
+                        (context as? Activity)?.finish()
+                    }
                 },
                 onRetry = {
-                    // Retry logic or simply go back (can implement a retry callback in ViewModel later)
-                    viewModel.resetState()
-                    navController.popBackStack()
+                    if (ean.isNotBlank()) {
+                        viewModel.getProduct(ean)
+                    } else {
+                        val hasPrevious = navController.previousBackStackEntry != null
+                        viewModel.resetState()
+                        if (hasPrevious) {
+                            navController.popBackStack()
+                        } else {
+                            (context as? Activity)?.finish()
+                        }
+                    }
                 }
             )
         }
