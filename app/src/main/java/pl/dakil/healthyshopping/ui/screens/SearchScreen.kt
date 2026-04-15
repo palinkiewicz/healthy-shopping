@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ImageNotSupported
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -20,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -69,12 +71,7 @@ fun SearchScreen(
             Box(modifier = Modifier.fillMaxSize()) {
                 when (val state = uiState) {
                     is SearchUiState.Idle -> {
-                        Text(
-                            text = "Wyniki pojawią się w tym miejscu",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            modifier = Modifier.align(Alignment.Center)
-                        )
+                        SearchTutorial(query)
                     }
                     is SearchUiState.Loading -> {
                         CircularProgressIndicator(
@@ -199,5 +196,86 @@ fun ProductCard(product: SearchProduct, onClick: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+@Composable
+fun SearchTutorial(query: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        val trimmed = query.trim()
+        val isShort = trimmed.isNotEmpty() && trimmed.length < 3
+        
+        val icon = if (isShort) Icons.Default.Info else Icons.Default.Search
+        val iconColor = if (isShort) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+        
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .background(iconColor.copy(alpha = 0.1f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = iconColor
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        val title = if (isShort) "Wpisz jeszcze trochę..." else "Zacznij szukać!"
+        val description = if (isShort) {
+            val remaining = 3 - trimmed.length
+            "Wyszukiwarka potrzebuje co najmniej 3 znaków. Wpisz jeszcze co najmniej $remaining ${if (remaining == 1) "znak" else "znaki"}."
+        } else {
+            "Wpisz nazwę produktu, aby sprawdzić jego skład i wpływ na zdrowie."
+        }
+        
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        Text(
+            text = description,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+fun TutorialItem(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
