@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 enum class ThemePreset {
     SYSTEM, DYNAMIC, LIGHT, DARK, OLED, SEPIA, FOREST
@@ -38,6 +39,11 @@ class SettingsRepository(context: Context) {
     )
     val showProductTags: StateFlow<Boolean> = _showProductTags.asStateFlow()
 
+    private val _comparisonEans = MutableStateFlow(
+        prefs.getStringSet("comparison_eans", emptySet()) ?: emptySet()
+    )
+    val comparisonEans: StateFlow<Set<String>> = _comparisonEans.asStateFlow()
+
     fun setThemePreset(preset: ThemePreset) {
         prefs.edit().putString("theme_preset", preset.name).apply()
         _themePreset.value = preset
@@ -61,5 +67,26 @@ class SettingsRepository(context: Context) {
     fun setShowProductTags(enabled: Boolean) {
         prefs.edit().putBoolean("show_product_tags", enabled).apply()
         _showProductTags.value = enabled
+    }
+
+    fun addToComparison(ean: String) {
+        val current = _comparisonEans.value.toMutableSet()
+        if (current.add(ean)) {
+            prefs.edit().putStringSet("comparison_eans", current).apply()
+            _comparisonEans.value = current
+        }
+    }
+
+    fun removeFromComparison(ean: String) {
+        val current = _comparisonEans.value.toMutableSet()
+        if (current.remove(ean)) {
+            prefs.edit().putStringSet("comparison_eans", current).apply()
+            _comparisonEans.value = current
+        }
+    }
+
+    fun clearComparison() {
+        prefs.edit().remove("comparison_eans").apply()
+        _comparisonEans.value = emptySet()
     }
 }

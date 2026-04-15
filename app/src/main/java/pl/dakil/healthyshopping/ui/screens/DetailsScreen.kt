@@ -16,6 +16,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.AddChart
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,6 +44,8 @@ fun DetailsScreen(
     showNutritionProgressBars: Boolean,
     showHighlightedIngredients: Boolean,
     showProductTags: Boolean,
+    isProductInComparison: Boolean,
+    onToggleComparison: () -> Unit,
     onBackClicked: () -> Unit,
     onRetry: () -> Unit
 ) {
@@ -57,7 +61,17 @@ fun DetailsScreen(
                 actions = {
                     val context = LocalContext.current
                     if (uiState is ProductUiState.Success) {
-                        val shareText = uiState.product.share?.shareText
+                        val product = uiState.product
+                        
+                        IconButton(onClick = onToggleComparison) {
+                            Icon(
+                                imageVector = if (isProductInComparison) Icons.Default.CheckCircle else Icons.Default.AddChart,
+                                contentDescription = if (isProductInComparison) "Usuń z porównania" else "Dodaj do porównania",
+                                tint = if (isProductInComparison) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+
+                        val shareText = product.share?.shareText
                         if (shareText != null) {
                             IconButton(onClick = {
                                 val sendIntent: Intent = Intent().apply {
