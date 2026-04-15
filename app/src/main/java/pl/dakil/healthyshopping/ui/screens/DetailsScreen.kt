@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.scale
 import coil.compose.AsyncImage
 import pl.dakil.healthyshopping.data.model.ProductResponse
 import pl.dakil.healthyshopping.ui.viewmodel.ProductUiState
+import pl.dakil.healthyshopping.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -411,7 +412,6 @@ fun ProductDetailsContent(
                 } else {
                     if (showHighlightedIngredients && !product.ingredientPhrases.isNullOrEmpty()) {
                         val isDarkTheme = isSystemInDarkTheme()
-                        val highlightAlpha = if (isDarkTheme) 0.3f else 0.9f
                         
                         val annotatedText = buildAnnotatedString {
                             val desc = product.description
@@ -419,19 +419,15 @@ fun ProductDetailsContent(
                             
                             product.ingredientPhrases.forEach { phraseInfo ->
                                 val phrase = phraseInfo.phrase ?: return@forEach
-                                val colorHex = phraseInfo.backgroundColor ?: return@forEach
+                                val colorHex = phraseInfo.backgroundColor ?: ""
                                 
-                                val bgColor = try {
-                                    Color(android.graphics.Color.parseColor(colorHex)).copy(alpha = highlightAlpha)
-                                } catch (e: Exception) {
-                                    Color.Transparent
-                                }
+                                val (bgColor, textColor) = translateIngredientColor(colorHex, isDarkTheme)
                                 
                                 var startIndex = desc.indexOf(phrase, ignoreCase = true)
                                 while (startIndex >= 0) {
                                     val endIndex = startIndex + phrase.length
                                     addStyle(
-                                        style = SpanStyle(background = bgColor),
+                                        style = SpanStyle(background = bgColor, color = textColor),
                                         start = startIndex,
                                         end = endIndex
                                     )
@@ -481,15 +477,13 @@ fun ProductDetailsContent(
                         }
                         
                         val isDarkTheme = isSystemInDarkTheme()
-                        val headerBg = when (level) {
-                            1 -> if (isDarkTheme) Color(0xFF2E5E3E) else Color(0xFFD9F6E4)
-                            2 -> if (isDarkTheme) Color(0xFF6B5811) else Color(0xFFFFF3C4)
-                            3 -> if (isDarkTheme) Color(0xFF7A4B1A) else Color(0xFFFEEDD9)
-                            4 -> if (isDarkTheme) Color(0xFF8B2C2C) else Color(0xFFFBE4E4)
-                            5 -> if (isDarkTheme) Color(0xFF5A0000) else Color(0xFFFF8A8A)
-                            else -> MaterialTheme.colorScheme.surfaceVariant
+                        val (headerBg, headerTextColor) = when (level) {
+                            1 -> if (isDarkTheme) ingredient_dark_green to ingredient_dark_onGreen else ingredient_light_green to ingredient_light_onGreen
+                            2 -> if (isDarkTheme) ingredient_dark_yellow to ingredient_dark_onYellow else ingredient_light_yellow to ingredient_light_onYellow
+                            3 -> if (isDarkTheme) ingredient_dark_orange to ingredient_dark_onOrange else ingredient_light_orange to ingredient_light_onOrange
+                            4, 5 -> if (isDarkTheme) ingredient_dark_red to ingredient_dark_onRed else ingredient_light_red to ingredient_light_onRed
+                            else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
                         }
-                        val headerTextColor = if (isDarkTheme) Color.White else (if (level > 0) Color.Black.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant)
 
                         Card(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -541,15 +535,13 @@ fun ProductDetailsContent(
                     ingredients.forEach { ing ->
                         val level = ing.harmfulLevel ?: 0
                         val isDarkTheme = isSystemInDarkTheme()
-                        val badgeColor = when (level) {
-                            1 -> if (isDarkTheme) Color(0xFF2E5E3E) else Color(0xFFD9F6E4)
-                            2 -> if (isDarkTheme) Color(0xFF6B5811) else Color(0xFFFFF3C4)
-                            3 -> if (isDarkTheme) Color(0xFF7A4B1A) else Color(0xFFFEEDD9)
-                            4 -> if (isDarkTheme) Color(0xFF8B2C2C) else Color(0xFFFBE4E4)
-                            5 -> if (isDarkTheme) Color(0xFF5A0000) else Color(0xFFFF8A8A)
-                            else -> MaterialTheme.colorScheme.surfaceVariant
+                        val (badgeColor, badgeTextColor) = when (level) {
+                            1 -> if (isDarkTheme) ingredient_dark_green to ingredient_dark_onGreen else ingredient_light_green to ingredient_light_onGreen
+                            2 -> if (isDarkTheme) ingredient_dark_yellow to ingredient_dark_onYellow else ingredient_light_yellow to ingredient_light_onYellow
+                            3 -> if (isDarkTheme) ingredient_dark_orange to ingredient_dark_onOrange else ingredient_light_orange to ingredient_light_onOrange
+                            4, 5 -> if (isDarkTheme) ingredient_dark_red to ingredient_dark_onRed else ingredient_light_red to ingredient_light_onRed
+                            else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
                         }
-                        val badgeTextColor = if (isDarkTheme) Color.White else (if (level > 0) Color.Black.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant)
                         
                         Row(
                             modifier = Modifier
@@ -616,6 +608,28 @@ fun ErrorContent(message: String, onRetry: () -> Unit) {
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
             Text("Spróbuj ponownie")
+        }
+    }
+}
+
+fun translateIngredientColor(apiHex: String, isDark: Boolean): Pair<Color, Color> {
+    return when (apiHex.uppercase()) {
+        "#D9F6E4" -> if (isDark) ingredient_dark_green to ingredient_dark_onGreen else ingredient_light_green to ingredient_light_onGreen
+        "#EBF3CC" -> if (isDark) ingredient_dark_yellow to ingredient_dark_onYellow else ingredient_light_yellow to ingredient_light_onYellow
+        "#FEEDD9" -> if (isDark) ingredient_dark_orange to ingredient_dark_onOrange else ingredient_light_orange to ingredient_light_onOrange
+        "#FFF3C4" -> if (isDark) ingredient_dark_red to ingredient_dark_onRed else ingredient_light_red to ingredient_light_onRed
+        else -> {
+            val bgColor = try {
+                Color(android.graphics.Color.parseColor(apiHex))
+            } catch (e: Exception) {
+                Color.Transparent
+            }
+            // For unknown colors, we use a fallback alpha and standard text color
+            if (isDark) {
+                bgColor.copy(alpha = 0.3f) to Color.White
+            } else {
+                bgColor.copy(alpha = 0.9f) to Color.Black
+            }
         }
     }
 }

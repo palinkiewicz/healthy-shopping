@@ -23,6 +23,16 @@ val md_theme_light_onBackground = Color(0xFF191C1A)
 val md_theme_light_surface = Color(0xFFFBFDF8)
 val md_theme_light_onSurface = Color(0xFF191C1A)
 
+// Ingredient Highlights - Light
+val ingredient_light_green = Color(0xFFCCF9D9)
+val ingredient_light_onGreen = Color(0xFF00210C)
+val ingredient_light_yellow = Color(0xFFEBF3CC)
+val ingredient_light_onYellow = Color(0xFF151D00)
+val ingredient_light_orange = Color(0xFFFEEDD9)
+val ingredient_light_onOrange = Color(0xFF291800)
+val ingredient_light_red = Color(0xFFFFDAD6)
+val ingredient_light_onRed = Color(0xFF410002)
+
 val md_theme_dark_primary = Color(0xFF7DDE9C)
 val md_theme_dark_onPrimary = Color(0xFF003918)
 val md_theme_dark_primaryContainer = Color(0xFF005327)
@@ -43,6 +53,16 @@ val md_theme_dark_background = Color(0xFF191C1A)
 val md_theme_dark_onBackground = Color(0xFFE1E3DF)
 val md_theme_dark_surface = Color(0xFF191C1A)
 val md_theme_dark_onSurface = Color(0xFFE1E3DF)
+
+// Ingredient Highlights - Dark
+val ingredient_dark_green = Color(0xFF005327)
+val ingredient_dark_onGreen = Color(0xFFCCF9D9)
+val ingredient_dark_yellow = Color(0xFF3C4B00)
+val ingredient_dark_onYellow = Color(0xFFEBF3CC)
+val ingredient_dark_orange = Color(0xFF5A3E00)
+val ingredient_dark_onOrange = Color(0xFFFEEDD9)
+val ingredient_dark_red = Color(0xFF93000A)
+val ingredient_dark_onRed = Color(0xFFFFDAD6)
 
 // OLED Theme (True Black Background)
 val md_theme_oled_primary = Color(0xFF7DDE9C)
