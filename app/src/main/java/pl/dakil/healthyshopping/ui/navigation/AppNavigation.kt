@@ -28,6 +28,10 @@ import androidx.compose.material.icons.filled.CompareArrows
 import androidx.compose.material3.*
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
+import java.net.URLEncoder
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
+import pl.dakil.healthyshopping.ui.screens.FullScreenImageScreen
 import pl.dakil.healthyshopping.ui.screens.DetailsScreen
 import pl.dakil.healthyshopping.ui.screens.MainScreen
 import pl.dakil.healthyshopping.ui.screens.SearchScreen
@@ -261,7 +265,22 @@ fun AppNavigation(
                             (context as? Activity)?.finish()
                         }
                     }
+                },
+                onImageClicked = { url ->
+                    val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
+                    navController.navigate("full_screen_image/$encodedUrl")
                 }
+            )
+        }
+        composable(
+            route = "full_screen_image/{imageUrl}",
+            arguments = listOf(navArgument("imageUrl") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val encodedUrl = backStackEntry.arguments?.getString("imageUrl") ?: ""
+            val imageUrl = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.toString())
+            FullScreenImageScreen(
+                imageUrl = imageUrl,
+                onBackClicked = { navController.popBackStack() }
             )
         }
         }

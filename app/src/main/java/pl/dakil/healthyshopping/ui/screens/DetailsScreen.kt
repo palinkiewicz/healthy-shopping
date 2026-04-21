@@ -2,6 +2,7 @@ package pl.dakil.healthyshopping.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -47,7 +48,8 @@ fun DetailsScreen(
     isProductInComparison: Boolean,
     onToggleComparison: () -> Unit,
     onBackClicked: () -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onImageClicked: (String) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -112,7 +114,8 @@ fun DetailsScreen(
                         showGroupedIngredients = showGroupedIngredients,
                         showNutritionProgressBars = showNutritionProgressBars,
                         showHighlightedIngredients = showHighlightedIngredients,
-                        showProductTags = showProductTags
+                        showProductTags = showProductTags,
+                        onImageClicked = onImageClicked
                     )
                 }
                 is ProductUiState.Error -> {
@@ -130,7 +133,8 @@ fun ProductDetailsContent(
     showGroupedIngredients: Boolean,
     showNutritionProgressBars: Boolean,
     showHighlightedIngredients: Boolean,
-    showProductTags: Boolean
+    showProductTags: Boolean,
+    onImageClicked: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -178,9 +182,9 @@ fun ProductDetailsContent(
                             style = MaterialTheme.typography.titleSmall,
                             color = textColor
                         )
-                        unverified.description?.let {
+                        unverified.description?.let { desc ->
                             Text(
-                                text = it,
+                                text = desc,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = descColor,
                                 modifier = Modifier.padding(top = 4.dp)
@@ -196,15 +200,16 @@ fun ProductDetailsContent(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            product.image?.url?.let {
+            product.image?.url?.let { url ->
                 AsyncImage(
-                    model = it,
+                    model = url,
                     contentDescription = "Zdjęcie produktu",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(100.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable { onImageClicked(url) }
                 )
             }
             
@@ -218,9 +223,9 @@ fun ProductDetailsContent(
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 
-                product.category?.name?.let {
+                product.category?.name?.let { catName ->
                     Text(
-                        text = it,
+                        text = catName,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                         modifier = Modifier.padding(top = 4.dp)
