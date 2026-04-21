@@ -162,6 +162,7 @@ fun AppNavigation(
             Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
                 SearchScreen(
                     viewModel = searchViewModel,
+                    settingsViewModel = settingsViewModel,
                     onProductClicked = { ean ->
                         navController.navigate("details/$ean")
                     }

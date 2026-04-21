@@ -7,6 +7,21 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import pl.dakil.healthyshopping.data.model.SearchProduct
 import pl.dakil.healthyshopping.data.repository.ProductRepository
+import pl.dakil.healthyshopping.data.repository.SettingsRepository
+
+enum class SortType {
+    SCORE, NUTRIENT
+}
+
+enum class SortOrder {
+    ASCENDING, DESCENDING
+}
+
+data class SearchSort(
+    val type: SortType = SortType.SCORE,
+    val order: SortOrder = SortOrder.DESCENDING,
+    val nutrientId: String? = null
+)
 
 sealed interface SearchUiState {
     data object Idle : SearchUiState
@@ -16,12 +31,20 @@ sealed interface SearchUiState {
 }
 
 @OptIn(FlowPreview::class)
-class SearchViewModel(private val repository: ProductRepository) : ViewModel() {
+class SearchViewModel(
+    private val productRepository: ProductRepository,
+    private val settingsRepository: SettingsRepository
+) : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
     private val _uiState = MutableStateFlow<SearchUiState>(SearchUiState.Idle)
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
+
+    private val _sort = MutableStateFlow(SearchSort())
+    val sort: StateFlow<SearchSort> = _sort.asStateFlow()
+
+    private var allProducts: List<SearchProduct> = emptyList()
 
     init {
         viewModelScope.launch {
@@ -43,12 +66,50 @@ class SearchViewModel(private val repository: ProductRepository) : ViewModel() {
         _searchQuery.value = query
     }
 
+    fun setSort(sort: SearchSort) {
+        _sort.value = sort
+        if (sort.type == SortType.NUTRIENT && sort.nutrientId != null) {
+            settingsRepository.setNutrientVisible(sort.nutrientId, true)
+        }
+        applyCurrentSort()
+    }
+
+    private fun applyCurrentSort() {
+        val currentState = _uiState.value
+        if (currentState is SearchUiState.Success) {
+            _uiState.value = SearchUiState.Success(sortProducts(allProducts, _sort.value))
+        }
+    }
+
+    private fun sortProducts(products: List<SearchProduct>, sort: SearchSort): List<SearchProduct> {
+        return when (sort.type) {
+            SortType.SCORE -> {
+                if (sort.order == SortOrder.ASCENDING) {
+                    products.sortedBy { it.score?.value ?: Int.MAX_VALUE }
+                } else {
+                    products.sortedByDescending { it.score?.value ?: Int.MIN_VALUE }
+                }
+            }
+            SortType.NUTRIENT -> {
+                val nutrientId = sort.nutrientId ?: return products
+                products.sortedWith { p1, p2 ->
+                    val v1 = p1.nutrients?.nutrients?.find { it.id == nutrientId }?.details?.value?.replace(",", ".")?.toDoubleOrNull() 
+                        ?: if (sort.order == SortOrder.ASCENDING) Double.MAX_VALUE else Double.MIN_VALUE
+                    val v2 = p2.nutrients?.nutrients?.find { it.id == nutrientId }?.details?.value?.replace(",", ".")?.toDoubleOrNull() 
+                        ?: if (sort.order == SortOrder.ASCENDING) Double.MAX_VALUE else Double.MIN_VALUE
+                    if (sort.order == SortOrder.ASCENDING) v1.compareTo(v2) else v2.compareTo(v1)
+                }
+            }
+        }
+    }
+
     private suspend fun performSearch(query: String) {
         _uiState.value = SearchUiState.Loading
-        val result = repository.searchProducts(query)
+        val result = productRepository.searchProducts(query)
         result.fold(
             onSuccess = { response ->
-                _uiState.value = SearchUiState.Success(response.products)
+                allProducts = response.products
+                _uiState.value = SearchUiState.Success(sortProducts(allProducts, _sort.value))
             },
             onFailure = { error ->
                 _uiState.value = SearchUiState.Error(error.message ?: "Wystąpił błąd")

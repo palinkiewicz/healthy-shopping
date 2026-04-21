@@ -7,6 +7,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
+data class NutrientSetting(
+    val id: String,
+    val name: String,
+    val defaultColor: String
+)
+
+val AVAILABLE_NUTRIENTS = listOf(
+    NutrientSetting("energy_value", "Kalorie", "#FFFFFF"),
+    NutrientSetting("fat", "Tłuszcz", "#2196F3"),
+    NutrientSetting("including_saturated_fatty_acids", "Kwasy nasycone", "#BBDEFB"),
+    NutrientSetting("carbohydrates", "Węglowodany", "#FFEB3B"),
+    NutrientSetting("including_sugars", "Cukry", "#FF9800"),
+    NutrientSetting("fiber", "Błonnik", "#795548"),
+    NutrientSetting("protein", "Białko", "#4CAF50"),
+    NutrientSetting("salt", "Sól", "#F44336")
+)
+
 enum class ThemePreset {
     SYSTEM, DYNAMIC, LIGHT, DARK, OLED, SEPIA, FOREST
 }
@@ -43,6 +60,16 @@ class SettingsRepository(context: Context) {
         prefs.getStringSet("comparison_eans", emptySet()) ?: emptySet()
     )
     val comparisonEans: StateFlow<Set<String>> = _comparisonEans.asStateFlow()
+
+    private val _visibleNutrients = MutableStateFlow(
+        prefs.getStringSet("visible_nutrients", emptySet()) ?: emptySet()
+    )
+    val visibleNutrients: StateFlow<Set<String>> = _visibleNutrients.asStateFlow()
+
+    private val _nutrientColors = MutableStateFlow(
+        AVAILABLE_NUTRIENTS.associate { it.id to prefs.getString("nutrient_color_${it.id}", it.defaultColor)!! }
+    )
+    val nutrientColors: StateFlow<Map<String, String>> = _nutrientColors.asStateFlow()
 
     fun setThemePreset(preset: ThemePreset) {
         prefs.edit().putString("theme_preset", preset.name).apply()
@@ -88,5 +115,17 @@ class SettingsRepository(context: Context) {
     fun clearComparison() {
         prefs.edit().remove("comparison_eans").apply()
         _comparisonEans.value = emptySet()
+    }
+
+    fun setNutrientVisible(id: String, visible: Boolean) {
+        val current = _visibleNutrients.value.toMutableSet()
+        if (visible) current.add(id) else current.remove(id)
+        prefs.edit().putStringSet("visible_nutrients", current).apply()
+        _visibleNutrients.value = current
+    }
+
+    fun setNutrientColor(id: String, color: String) {
+        prefs.edit().putString("nutrient_color_$id", color).apply()
+        _nutrientColors.update { it.toMutableMap().apply { put(id, color) } }
     }
 }

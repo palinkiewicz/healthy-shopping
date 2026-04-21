@@ -13,5 +13,6 @@ data class SearchProduct(
     val name: String? = null,
     val score: Score? = null,
     val harmfulLevel: Int? = null,
-    val image: ImageInfo? = null
+    val image: ImageInfo? = null,
+    val nutrients: NutrientValues? = null
 )

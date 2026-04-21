@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -19,9 +20,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import pl.dakil.healthyshopping.data.repository.AVAILABLE_NUTRIENTS
 import pl.dakil.healthyshopping.data.repository.ThemePreset
 import pl.dakil.healthyshopping.ui.theme.HealthyShoppingTheme
 import pl.dakil.healthyshopping.ui.viewmodel.SettingsViewModel
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +39,8 @@ fun SettingsScreen(
     val showNutritionProgressBars by viewModel.showNutritionProgressBars.collectAsState()
     val showHighlightedIngredients by viewModel.showHighlightedIngredients.collectAsState()
     val showProductTags by viewModel.showProductTags.collectAsState()
+    val visibleNutrients by viewModel.visibleNutrients.collectAsState()
+    val nutrientColors by viewModel.nutrientColors.collectAsState()
     var showThemeDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -85,6 +92,26 @@ fun SettingsScreen(
                 checked = showProductTags,
                 onCheckedChange = { viewModel.setShowProductTags(it) }
             )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+
+            SettingsCategoryHeader("Podgląd na wynikach wyszukiwania")
+            Text(
+                text = "Wybierz wartości odżywcze, które chcesz widzieć bezpośrednio na liście produktów.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+
+            AVAILABLE_NUTRIENTS.forEach { nutrient ->
+                NutrientSettingItem(
+                    name = nutrient.name,
+                    isVisible = visibleNutrients.contains(nutrient.id),
+                    colorHex = nutrientColors[nutrient.id] ?: nutrient.defaultColor,
+                    onToggleVisible = { viewModel.setNutrientVisible(nutrient.id, it) },
+                    onColorChange = { viewModel.setNutrientColor(nutrient.id, it) }
+                )
+            }
         }
     }
 
@@ -110,10 +137,10 @@ fun SettingsScreen(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    ThemePreset.values().forEach { preset ->
+                    for (preset in ThemePreset.values()) {
                         // Hide Dynamic Color option if Android < 12
                         if (preset == ThemePreset.DYNAMIC && Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                            return@forEach
+                            continue
                         }
                         
                         ThemePreviewRow(
@@ -194,6 +221,7 @@ fun getPresetDisplayName(preset: ThemePreset): String {
         ThemePreset.OLED -> "OLED (Czysta Czerń)"
         ThemePreset.SEPIA -> "Sepia (Ochrona Wzroku)"
         ThemePreset.FOREST -> "Forest (Zieleń)"
+        else -> "Nieznany"
     }
 }
 
@@ -251,6 +279,104 @@ fun ThemePreviewRow(
                             .clip(RoundedCornerShape(4.dp))
                             .background(MaterialTheme.colorScheme.primary)
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun NutrientSettingItem(
+    name: String,
+    isVisible: Boolean,
+    colorHex: String,
+    onToggleVisible: (Boolean) -> Unit,
+    onColorChange: (String) -> Unit
+) {
+    var showColorDialog by remember { mutableStateOf(false) }
+    val color = try { Color(android.graphics.Color.parseColor(colorHex)) } catch (e: Exception) { Color.Gray }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onToggleVisible(!isVisible) }
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Checkbox(checked = isVisible, onCheckedChange = onToggleVisible)
+        
+        Spacer(modifier = Modifier.width(8.dp))
+        
+        Text(
+            text = name,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f)
+        )
+
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(color)
+                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f), CircleShape)
+                .clickable { showColorDialog = true }
+        )
+    }
+
+    if (showColorDialog) {
+        val presetColors = listOf(
+            "#FFFFFF", "#2196F3", "#03A9F4", "#00BCD4", "#009688", 
+            "#4CAF50", "#8BC34A", "#CDDC39", "#FFEB3B", "#FFC107", 
+            "#FF9800", "#FF5722", "#F44336", "#E91E63", "#9C27B0", 
+            "#673AB7", "#3F51B5", "#795548", "#9E9E9E", "#607D8B"
+        )
+
+        Dialog(onDismissRequest = { showColorDialog = false }) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Text(
+                        text = "Wybierz kolor dla: $name",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(40.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.heightIn(max = 300.dp)
+                    ) {
+                        items(presetColors) { hex ->
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(android.graphics.Color.parseColor(hex)))
+                                    .border(
+                                        width = if (hex.lowercase() == colorHex.lowercase()) 3.dp else 1.dp,
+                                        color = if (hex.lowercase() == colorHex.lowercase()) MaterialTheme.colorScheme.primary else Color.Black.copy(alpha = 0.1f),
+                                        shape = CircleShape
+                                    )
+                                    .clickable {
+                                        onColorChange(hex)
+                                        showColorDialog = false
+                                    }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    TextButton(
+                        onClick = { showColorDialog = false },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text("Anuluj")
+                    }
                 }
             }
         }

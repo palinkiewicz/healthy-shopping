@@ -17,6 +17,8 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
     val showProductTags: StateFlow<Boolean> = repository.showProductTags
     val comparisonEans: StateFlow<Set<String>> = repository.comparisonEans
+    val visibleNutrients: StateFlow<Set<String>> = repository.visibleNutrients
+    val nutrientColors: StateFlow<Map<String, String>> = repository.nutrientColors
 
     fun setThemePreset(preset: ThemePreset) {
         repository.setThemePreset(preset)
@@ -48,5 +50,13 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
     fun clearComparison() {
         repository.clearComparison()
+    }
+
+    fun setNutrientVisible(id: String, visible: Boolean) {
+        repository.setNutrientVisible(id, visible)
+    }
+
+    fun setNutrientColor(id: String, color: String) {
+        repository.setNutrientColor(id, color)
     }
 }
