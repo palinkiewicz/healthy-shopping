@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import pl.dakil.healthyshopping.data.repository.AVAILABLE_NUTRIENTS
 import pl.dakil.healthyshopping.data.repository.ThemePreset
 import pl.dakil.healthyshopping.ui.theme.HealthyShoppingTheme
@@ -31,8 +33,7 @@ import androidx.compose.foundation.lazy.grid.items
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel,
-    onBackClicked: () -> Unit
+    viewModel: SettingsViewModel
 ) {
     val themePreset by viewModel.themePreset.collectAsState()
     val showGroupedIngredients by viewModel.showGroupedIngredients.collectAsState()
@@ -92,6 +93,46 @@ fun SettingsScreen(
                 checked = showProductTags,
                 onCheckedChange = { viewModel.setShowProductTags(it) }
             )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+
+            SettingsCategoryHeader("Historia przeglądania")
+            
+            val recentlyViewedLimit by viewModel.recentlyViewedLimit.collectAsState()
+            
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                Text(
+                    text = "Liczba wyświetlanych produktów: $recentlyViewedLimit",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = if (recentlyViewedLimit == 0) "Wyłączono wyświetlanie historii." else "Pokazuje ostatnie $recentlyViewedLimit odwiedzonych produktów na ekranie głównym.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+                
+                Slider(
+                    value = recentlyViewedLimit.toFloat(),
+                    onValueChange = { viewModel.setRecentlyViewedLimit(it.toInt()) },
+                    valueRange = 0f..10f,
+                    steps = 9,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+            
+            val context = LocalContext.current
+            TextButton(
+                onClick = { 
+                    viewModel.clearRecentlyViewed()
+                    Toast.makeText(context, "Historia została wyczyszczona", Toast.LENGTH_SHORT).show()
+                },
+                modifier = Modifier.padding(start = 8.dp),
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Wyczyść historię")
+            }
+
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
 
@@ -221,7 +262,6 @@ fun getPresetDisplayName(preset: ThemePreset): String {
         ThemePreset.OLED -> "OLED (Czysta Czerń)"
         ThemePreset.SEPIA -> "Sepia (Ochrona Wzroku)"
         ThemePreset.FOREST -> "Forest (Zieleń)"
-        else -> "Nieznany"
     }
 }
 

@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import pl.dakil.healthyshopping.data.model.SearchProduct
 
 data class NutrientSetting(
     val id: String,
@@ -30,6 +33,7 @@ enum class ThemePreset {
 
 class SettingsRepository(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("settings_prefs", Context.MODE_PRIVATE)
+    private val json = Json { ignoreUnknownKeys = true }
 
     private val _themePreset = MutableStateFlow(
         ThemePreset.valueOf(prefs.getString("theme_preset", ThemePreset.SYSTEM.name) ?: ThemePreset.SYSTEM.name)
@@ -70,6 +74,16 @@ class SettingsRepository(context: Context) {
         AVAILABLE_NUTRIENTS.associate { it.id to prefs.getString("nutrient_color_${it.id}", it.defaultColor)!! }
     )
     val nutrientColors: StateFlow<Map<String, String>> = _nutrientColors.asStateFlow()
+
+    private val _recentlyViewedLimit = MutableStateFlow(
+        prefs.getInt("recently_viewed_limit", 5)
+    )
+    val recentlyViewedLimit: StateFlow<Int> = _recentlyViewedLimit.asStateFlow()
+
+    private val _recentlyViewedItems = MutableStateFlow(
+        loadRecentlyViewed()
+    )
+    val recentlyViewedItems: StateFlow<List<SearchProduct>> = _recentlyViewedItems.asStateFlow()
 
     fun setThemePreset(preset: ThemePreset) {
         prefs.edit().putString("theme_preset", preset.name).apply()
@@ -127,5 +141,41 @@ class SettingsRepository(context: Context) {
     fun setNutrientColor(id: String, color: String) {
         prefs.edit().putString("nutrient_color_$id", color).apply()
         _nutrientColors.update { it.toMutableMap().apply { put(id, color) } }
+    }
+
+    fun setRecentlyViewedLimit(limit: Int) {
+        prefs.edit().putInt("recently_viewed_limit", limit).apply()
+        _recentlyViewedLimit.value = limit
+    }
+
+    fun addToRecentlyViewed(product: SearchProduct) {
+        if (product.ean == null) return
+        
+        val current = _recentlyViewedItems.value.toMutableList()
+        current.removeAll { it.ean == product.ean }
+        current.add(0, product)
+        
+        val trimmed = current.take(10)
+        saveRecentlyViewed(trimmed)
+        _recentlyViewedItems.value = trimmed
+    }
+
+    fun clearRecentlyViewed() {
+        saveRecentlyViewed(emptyList())
+        _recentlyViewedItems.value = emptyList()
+    }
+
+    private fun loadRecentlyViewed(): List<SearchProduct> {
+        val serialized = prefs.getString("recently_viewed_items", null) ?: return emptyList()
+        return try {
+            json.decodeFromString<List<SearchProduct>>(serialized)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun saveRecentlyViewed(items: List<SearchProduct>) {
+        val serialized = json.encodeToString(items)
+        prefs.edit().putString("recently_viewed_items", serialized).apply()
     }
 }

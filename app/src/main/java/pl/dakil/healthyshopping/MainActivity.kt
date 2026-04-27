@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
         object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 @Suppress("UNCHECKED_CAST")
-                return MainViewModel(productRepository) as T
+                return MainViewModel(productRepository, settingsRepository) as T
             }
         }
     }

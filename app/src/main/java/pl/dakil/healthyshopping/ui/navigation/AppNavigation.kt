@@ -21,10 +21,10 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.CompareArrows
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.CompareArrows
 import androidx.compose.material3.*
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -47,7 +47,7 @@ import pl.dakil.healthyshopping.ui.viewmodel.ProductUiState
 sealed class BottomNavItem(var title: String, var icon: androidx.compose.ui.graphics.vector.ImageVector, var route: String) {
     data object Main : BottomNavItem("Główna", Icons.Default.Home, "main")
     data object Search : BottomNavItem("Szukaj", Icons.Default.Search, "search")
-    data object Comparison : BottomNavItem("Porównanie", Icons.Default.CompareArrows, "comparison")
+    data object Comparison : BottomNavItem("Porównanie", Icons.AutoMirrored.Filled.CompareArrows, "comparison")
     data object Settings : BottomNavItem("Ustawienia", Icons.Default.Settings, "settings_route")
 }
 
@@ -151,8 +151,12 @@ fun AppNavigation(
         }
     ) {
         composable("main") {
+            val recentlyViewedItems by settingsViewModel.recentlyViewedItems.collectAsState()
+            val recentlyViewedLimit by settingsViewModel.recentlyViewedLimit.collectAsState()
             Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
                 MainScreen(
+                    recentlyViewedItems = recentlyViewedItems,
+                    recentlyViewedLimit = recentlyViewedLimit,
                     onSearchClicked = { ean ->
                         navController.navigate("details/$ean")
                     },
@@ -176,8 +180,7 @@ fun AppNavigation(
         composable("settings_route") {
             Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
                 SettingsScreen(
-                    viewModel = settingsViewModel,
-                    onBackClicked = { navController.popBackStack() }
+                    viewModel = settingsViewModel
                 )
             }
         }
@@ -225,6 +228,12 @@ fun AppNavigation(
                     if (currentState !is ProductUiState.Success || currentState.product.ean != ean) {
                         viewModel.getProduct(ean)
                     }
+                }
+            }
+
+            LaunchedEffect(uiState) {
+                if (uiState is ProductUiState.Success) {
+                    viewModel.addToHistory((uiState as ProductUiState.Success).product)
                 }
             }
 

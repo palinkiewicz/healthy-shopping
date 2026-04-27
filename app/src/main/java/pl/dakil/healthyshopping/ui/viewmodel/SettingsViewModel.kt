@@ -1,10 +1,10 @@
 package pl.dakil.healthyshopping.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.StateFlow
 import pl.dakil.healthyshopping.data.repository.SettingsRepository
 import pl.dakil.healthyshopping.data.repository.ThemePreset
+import pl.dakil.healthyshopping.data.model.SearchProduct
 
 class SettingsViewModel(private val repository: SettingsRepository) : ViewModel() {
     val themePreset: StateFlow<ThemePreset> = repository.themePreset
@@ -19,6 +19,9 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
     val comparisonEans: StateFlow<Set<String>> = repository.comparisonEans
     val visibleNutrients: StateFlow<Set<String>> = repository.visibleNutrients
     val nutrientColors: StateFlow<Map<String, String>> = repository.nutrientColors
+
+    val recentlyViewedLimit: StateFlow<Int> = repository.recentlyViewedLimit
+    val recentlyViewedItems: StateFlow<List<SearchProduct>> = repository.recentlyViewedItems
 
     fun setThemePreset(preset: ThemePreset) {
         repository.setThemePreset(preset)
@@ -58,5 +61,17 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
     fun setNutrientColor(id: String, color: String) {
         repository.setNutrientColor(id, color)
+    }
+
+    fun setRecentlyViewedLimit(limit: Int) {
+        repository.setRecentlyViewedLimit(limit)
+    }
+
+    fun addToRecentlyViewed(product: SearchProduct) {
+        repository.addToRecentlyViewed(product)
+    }
+
+    fun clearRecentlyViewed() {
+        repository.clearRecentlyViewed()
     }
 }
