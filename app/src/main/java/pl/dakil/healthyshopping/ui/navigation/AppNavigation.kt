@@ -218,7 +218,8 @@ fun AppNavigation(
             val showGroupedIngredients by settingsViewModel.showGroupedIngredients.collectAsState()
             val showNutritionProgressBars by settingsViewModel.showNutritionProgressBars.collectAsState()
             val showHighlightedIngredients by settingsViewModel.showHighlightedIngredients.collectAsState()
-            val showProductTags by settingsViewModel.showProductTags.collectAsState()
+            val detailsSectionOrder by settingsViewModel.detailsSectionOrder.collectAsState()
+            val hiddenDetailsSections by settingsViewModel.hiddenDetailsSections.collectAsState()
             val comparisonEans by settingsViewModel.comparisonEans.collectAsState()
             val isProductInComparison = ean in comparisonEans
 
@@ -244,7 +245,8 @@ fun AppNavigation(
                 showGroupedIngredients = showGroupedIngredients,
                 showNutritionProgressBars = showNutritionProgressBars,
                 showHighlightedIngredients = showHighlightedIngredients,
-                showProductTags = showProductTags,
+                detailsSectionOrder = detailsSectionOrder,
+                hiddenDetailsSections = hiddenDetailsSections,
                 isProductInComparison = isProductInComparison,
                 onToggleComparison = {
                     if (isProductInComparison) {

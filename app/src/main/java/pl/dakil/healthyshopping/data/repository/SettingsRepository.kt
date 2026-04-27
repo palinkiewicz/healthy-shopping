@@ -31,6 +31,14 @@ enum class ThemePreset {
     SYSTEM, DYNAMIC, LIGHT, DARK, OLED, SEPIA, FOREST
 }
 
+enum class DetailsSection(val id: String, val label: String) {
+    SCORE_CARD("score_card", "Wynik zdrowotny"),
+    PRODUCT_TAGS("product_tags", "Tagi produktu"),
+    NUTRITION_TABLE("nutrition_table", "Tabela wartości odżywczych"),
+    INGREDIENTS_LIST("ingredients_list", "Pełna lista składników"),
+    HARMFUL_INGREDIENTS("harmful_ingredients", "Szkodliwość składników")
+}
+
 class SettingsRepository(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("settings_prefs", Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true }
@@ -69,6 +77,16 @@ class SettingsRepository(context: Context) {
         prefs.getStringSet("visible_nutrients", emptySet()) ?: emptySet()
     )
     val visibleNutrients: StateFlow<Set<String>> = _visibleNutrients.asStateFlow()
+
+    private val _detailsSectionOrder = MutableStateFlow(
+        loadDetailsSectionOrder()
+    )
+    val detailsSectionOrder: StateFlow<List<String>> = _detailsSectionOrder.asStateFlow()
+
+    private val _hiddenDetailsSections = MutableStateFlow(
+        prefs.getStringSet("hidden_details_sections", emptySet()) ?: emptySet()
+    )
+    val hiddenDetailsSections: StateFlow<Set<String>> = _hiddenDetailsSections.asStateFlow()
 
     private val _nutrientColors = MutableStateFlow(
         AVAILABLE_NUTRIENTS.associate { it.id to prefs.getString("nutrient_color_${it.id}", it.defaultColor)!! }
@@ -146,6 +164,34 @@ class SettingsRepository(context: Context) {
     fun setRecentlyViewedLimit(limit: Int) {
         prefs.edit().putInt("recently_viewed_limit", limit).apply()
         _recentlyViewedLimit.value = limit
+    }
+
+    fun setDetailsSectionOrder(order: List<String>) {
+        val serialized = json.encodeToString(order)
+        prefs.edit().putString("details_section_order", serialized).apply()
+        _detailsSectionOrder.value = order
+    }
+
+    fun setDetailsSectionVisible(id: String, visible: Boolean) {
+        val current = _hiddenDetailsSections.value.toMutableSet()
+        if (visible) current.remove(id) else current.add(id)
+        prefs.edit().putStringSet("hidden_details_sections", current).apply()
+        _hiddenDetailsSections.value = current
+    }
+
+    private fun loadDetailsSectionOrder(): List<String> {
+        val serialized = prefs.getString("details_section_order", null)
+        val defaultOrder = DetailsSection.values().map { it.id }
+        if (serialized == null) return defaultOrder
+        
+        return try {
+            val loaded = json.decodeFromString<List<String>>(serialized)
+            // Ensure all sections are present (in case of app updates adding new sections)
+            val missing = defaultOrder.filter { it !in loaded }
+            loaded + missing
+        } catch (e: Exception) {
+            defaultOrder
+        }
     }
 
     fun addToRecentlyViewed(product: SearchProduct) {

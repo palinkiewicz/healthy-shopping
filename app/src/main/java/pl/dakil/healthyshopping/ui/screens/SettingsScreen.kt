@@ -29,6 +29,9 @@ import pl.dakil.healthyshopping.ui.viewmodel.SettingsViewModel
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import pl.dakil.healthyshopping.data.repository.DetailsSection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +45,8 @@ fun SettingsScreen(
     val showProductTags by viewModel.showProductTags.collectAsState()
     val visibleNutrients by viewModel.visibleNutrients.collectAsState()
     val nutrientColors by viewModel.nutrientColors.collectAsState()
+    val detailsSectionOrder by viewModel.detailsSectionOrder.collectAsState()
+    val hiddenDetailsSections by viewModel.hiddenDetailsSections.collectAsState()
     var showThemeDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -131,6 +136,71 @@ fun SettingsScreen(
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
             ) {
                 Text("Wyczyść historię")
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+
+            SettingsCategoryHeader("Kolejność i widoczność sekcji")
+            Text(
+                text = "Dostosuj układ ekranu produktu. Możesz ukryć sekcje lub zmienić ich kolejność.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    detailsSectionOrder.forEachIndexed { index, sectionId ->
+                        val section = DetailsSection.values().find { it.id == sectionId } ?: return@forEachIndexed
+                        val isVisible = sectionId !in hiddenDetailsSections
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = isVisible,
+                                onCheckedChange = { viewModel.setDetailsSectionVisible(sectionId, it) }
+                            )
+                            
+                            Text(
+                                text = section.label,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                                color = if (isVisible) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+
+                            IconButton(
+                                onClick = { viewModel.moveDetailsSection(index, index - 1) },
+                                enabled = index > 0
+                            ) {
+                                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Przesuń w górę")
+                            }
+
+                            IconButton(
+                                onClick = { viewModel.moveDetailsSection(index, index + 1) },
+                                enabled = index < detailsSectionOrder.size - 1
+                            ) {
+                                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Przesuń w dół")
+                            }
+                        }
+                        
+                        if (index < detailsSectionOrder.size - 1) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                            )
+                        }
+                    }
+                }
             }
 
 
@@ -391,7 +461,8 @@ fun NutrientSettingItem(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.heightIn(max = 300.dp)
                     ) {
-                        items(presetColors) { hex ->
+                        items(presetColors.size) { index ->
+                            val hex = presetColors[index]
                             Box(
                                 modifier = Modifier
                                     .size(40.dp)

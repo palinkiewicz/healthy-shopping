@@ -23,6 +23,9 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
     val recentlyViewedLimit: StateFlow<Int> = repository.recentlyViewedLimit
     val recentlyViewedItems: StateFlow<List<SearchProduct>> = repository.recentlyViewedItems
 
+    val detailsSectionOrder: StateFlow<List<String>> = repository.detailsSectionOrder
+    val hiddenDetailsSections: StateFlow<Set<String>> = repository.hiddenDetailsSections
+
     fun setThemePreset(preset: ThemePreset) {
         repository.setThemePreset(preset)
     }
@@ -41,6 +44,19 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
     fun setShowProductTags(enabled: Boolean) {
         repository.setShowProductTags(enabled)
+    }
+
+    fun moveDetailsSection(fromIndex: Int, toIndex: Int) {
+        val currentOrder = detailsSectionOrder.value.toMutableList()
+        if (fromIndex in currentOrder.indices && toIndex in currentOrder.indices) {
+            val item = currentOrder.removeAt(fromIndex)
+            currentOrder.add(toIndex, item)
+            repository.setDetailsSectionOrder(currentOrder)
+        }
+    }
+
+    fun setDetailsSectionVisible(id: String, visible: Boolean) {
+        repository.setDetailsSectionVisible(id, visible)
     }
 
     fun addToComparison(ean: String) {
