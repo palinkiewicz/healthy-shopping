@@ -1,15 +1,14 @@
 [versions]
-agp = "8.5.1"
-kotlin = "1.9.0"
-coreKtx = "1.12.0"
-lifecycleRuntimeKtx = "2.7.0"
+agp = "8.6.0"
+kotlin = "2.0.21"
+coreKtx = "1.15.0"
+lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.8.2"
-composeBom = "2024.05.00"
+composeBom = "2026.04.01"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 retrofit = "2.11.0"
-retrofitSerialization = "1.0.0"
 kotlinxSerialization = "1.6.3"
 navigationCompose = "2.7.7"
 coil = "2.6.0"
@@ -46,3 +45,4 @@ mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning"
 android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
