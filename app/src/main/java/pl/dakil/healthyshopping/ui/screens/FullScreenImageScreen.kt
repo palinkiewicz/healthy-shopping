@@ -39,7 +39,8 @@ fun FullScreenImageScreen(
                 )
             )
         },
-        containerColor = Color.Black
+        containerColor = Color.Black,
+        contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)
     ) { padding ->
         Box(
             modifier = Modifier

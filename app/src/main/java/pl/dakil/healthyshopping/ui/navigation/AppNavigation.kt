@@ -16,9 +16,13 @@ import androidx.navigation.NavType
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import android.app.Activity
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.ui.Modifier
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CompareArrows
@@ -96,11 +100,14 @@ fun AppNavigation(
                 }
             }
         },
-        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+        contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Bottom)
     ) { paddingValues ->
         NavHost(
             navController = navController,
             startDestination = "main",
+            modifier = Modifier
+                .padding(paddingValues)
+                .consumeWindowInsets(paddingValues),
         enterTransition = {
             val fromRoute = initialState.destination.route
             val toRoute = targetState.destination.route
@@ -153,48 +160,40 @@ fun AppNavigation(
         composable("main") {
             val recentlyViewedItems by settingsViewModel.recentlyViewedItems.collectAsState()
             val recentlyViewedLimit by settingsViewModel.recentlyViewedLimit.collectAsState()
-            Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
-                MainScreen(
-                    recentlyViewedItems = recentlyViewedItems,
-                    recentlyViewedLimit = recentlyViewedLimit,
-                    onSearchClicked = { ean ->
-                        navController.navigate("details/$ean")
-                    },
-                    onScanClicked = {
-                        navController.navigate("scanner")
-                    }
-                )
-            }
+            MainScreen(
+                recentlyViewedItems = recentlyViewedItems,
+                recentlyViewedLimit = recentlyViewedLimit,
+                onSearchClicked = { ean ->
+                    navController.navigate("details/$ean")
+                },
+                onScanClicked = {
+                    navController.navigate("scanner")
+                }
+            )
         }
         composable("search") {
-            Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
-                SearchScreen(
-                    viewModel = searchViewModel,
-                    settingsViewModel = settingsViewModel,
-                    onProductClicked = { ean ->
-                        navController.navigate("details/$ean")
-                    }
-                )
-            }
+            SearchScreen(
+                viewModel = searchViewModel,
+                settingsViewModel = settingsViewModel,
+                onProductClicked = { ean ->
+                    navController.navigate("details/$ean")
+                }
+            )
         }
         composable("settings_route") {
-            Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
-                SettingsScreen(
-                    viewModel = settingsViewModel
-                )
-            }
+            SettingsScreen(
+                viewModel = settingsViewModel
+            )
         }
         composable("comparison") {
             val showHighlightedIngredients by settingsViewModel.showHighlightedIngredients.collectAsState()
-            Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
-                ComparisonScreen(
-                    viewModel = comparisonViewModel,
-                    showHighlightedIngredients = showHighlightedIngredients,
-                    onProductClicked = { ean ->
-                        navController.navigate("details/$ean")
-                    }
-                )
-            }
+            ComparisonScreen(
+                viewModel = comparisonViewModel,
+                showHighlightedIngredients = showHighlightedIngredients,
+                onProductClicked = { ean ->
+                    navController.navigate("details/$ean")
+                }
+            )
         }
         composable("scanner") {
             ScannerScreen(

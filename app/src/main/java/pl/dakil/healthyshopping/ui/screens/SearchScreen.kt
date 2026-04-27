@@ -55,7 +55,8 @@ fun SearchScreen(
     val nutrientColors by settingsViewModel.nutrientColors.collectAsState()
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)
     ) { padding ->
         Column(
             modifier = Modifier

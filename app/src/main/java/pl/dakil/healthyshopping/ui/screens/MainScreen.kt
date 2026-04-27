@@ -58,7 +58,8 @@ fun MainScreen(
     )
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)
     ) { padding ->
         BoxWithConstraints(
             modifier = Modifier
