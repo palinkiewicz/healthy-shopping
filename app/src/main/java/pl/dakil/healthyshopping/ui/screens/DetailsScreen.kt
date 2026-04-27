@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.AddChart
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -417,13 +418,14 @@ fun ProductDetailsContent(
                                                 
                                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                                     LinearProgressIndicator(
-                                                        progress = rwsPercent,
+                                                        progress = { rwsPercent },
                                                         modifier = Modifier
                                                             .weight(1f)
                                                             .height(6.dp)
                                                             .clip(RoundedCornerShape(3.dp)),
                                                         color = barColor,
-                                                        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                                                        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                                                        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
                                                     )
                                                     Spacer(modifier = Modifier.width(8.dp))
                                                     Text(
