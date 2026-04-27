@@ -156,48 +156,53 @@ fun SettingsScreen(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    detailsSectionOrder.forEachIndexed { index, sectionId ->
-                        val section = DetailsSection.values().find { it.id == sectionId } ?: return@forEachIndexed
-                        val isVisible = sectionId !in hiddenDetailsSections
+                    for (index in detailsSectionOrder.indices) {
+                        val sectionId = detailsSectionOrder[index]
+                        val section = DetailsSection.entries.find { it.id == sectionId }
+                        if (section != null) {
+                            key(sectionId) {
+                                val isVisible = sectionId !in hiddenDetailsSections
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Checkbox(
-                                checked = isVisible,
-                                onCheckedChange = { viewModel.setDetailsSectionVisible(sectionId, it) }
-                            )
-                            
-                            Text(
-                                text = section.label,
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-                                color = if (isVisible) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                            )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = isVisible,
+                                        onCheckedChange = { viewModel.setDetailsSectionVisible(sectionId, it) }
+                                    )
 
-                            IconButton(
-                                onClick = { viewModel.moveDetailsSection(index, index - 1) },
-                                enabled = index > 0
-                            ) {
-                                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Przesuń w górę")
+                                    Text(
+                                        text = section.label,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                                        color = if (isVisible) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                    )
+
+                                    IconButton(
+                                        onClick = { viewModel.moveDetailsSection(index, index - 1) },
+                                        enabled = index > 0
+                                    ) {
+                                        Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Przesuń w górę")
+                                    }
+
+                                    IconButton(
+                                        onClick = { viewModel.moveDetailsSection(index, index + 1) },
+                                        enabled = index < detailsSectionOrder.size - 1
+                                    ) {
+                                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Przesuń w dół")
+                                    }
+                                }
+
+                                if (index < detailsSectionOrder.size - 1) {
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                                    )
+                                }
                             }
-
-                            IconButton(
-                                onClick = { viewModel.moveDetailsSection(index, index + 1) },
-                                enabled = index < detailsSectionOrder.size - 1
-                            ) {
-                                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Przesuń w dół")
-                            }
-                        }
-                        
-                        if (index < detailsSectionOrder.size - 1) {
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
-                            )
                         }
                     }
                 }
@@ -248,20 +253,21 @@ fun SettingsScreen(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    for (preset in ThemePreset.values()) {
-                        // Hide Dynamic Color option if Android < 12
-                        if (preset == ThemePreset.DYNAMIC && Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                            continue
-                        }
+                    for (preset in ThemePreset.entries) {
+                        val isDynamicOnOldAndroid = preset == ThemePreset.DYNAMIC && Build.VERSION.SDK_INT < Build.VERSION_CODES.S
                         
-                        ThemePreviewRow(
-                            preset = preset,
-                            isSelected = preset == themePreset,
-                            onClick = {
-                                viewModel.setThemePreset(preset)
-                                showThemeDialog = false
+                        if (!isDynamicOnOldAndroid) {
+                            key(preset) {
+                                ThemePreviewRow(
+                                    preset = preset,
+                                    isSelected = preset == themePreset,
+                                    onClick = {
+                                        viewModel.setThemePreset(preset)
+                                        showThemeDialog = false
+                                    }
+                                )
                             }
-                        )
+                        }
                     }
                     
                     Spacer(modifier = Modifier.height(16.dp))
