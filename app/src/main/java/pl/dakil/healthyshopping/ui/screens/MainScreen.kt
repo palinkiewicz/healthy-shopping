@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -41,6 +42,7 @@ import pl.dakil.healthyshopping.data.model.SearchProduct
 fun MainScreen(
     recentlyViewedItems: List<SearchProduct>,
     recentlyViewedLimit: Int,
+    bottomPadding: Dp = 0.dp,
     onSearchClicked: (String) -> Unit,
     onScanClicked: () -> Unit
 ) {
@@ -65,6 +67,7 @@ fun MainScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .padding(bottom = bottomPadding)
         ) {
             val minHeight = maxHeight
             

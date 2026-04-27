@@ -1,9 +1,12 @@
 package pl.dakil.healthyshopping.ui.navigation
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -17,12 +20,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import android.app.Activity
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CompareArrows
@@ -71,7 +73,11 @@ fun AppNavigation(
 
     Scaffold(
         bottomBar = {
-            if (showBottomBar) {
+            AnimatedVisibility(
+                visible = showBottomBar,
+                enter = slideInVertically(animationSpec = tween(400), initialOffsetY = { it }) + fadeIn(animationSpec = tween(400)),
+                exit = slideOutVertically(animationSpec = tween(400), targetOffsetY = { it }) + fadeOut(animationSpec = tween(400))
+            ) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                 ) {
@@ -106,7 +112,7 @@ fun AppNavigation(
             navController = navController,
             startDestination = "main",
             modifier = Modifier
-                .padding(paddingValues)
+                .fillMaxSize()
                 .consumeWindowInsets(paddingValues),
         enterTransition = {
             val fromRoute = initialState.destination.route
@@ -163,6 +169,7 @@ fun AppNavigation(
             MainScreen(
                 recentlyViewedItems = recentlyViewedItems,
                 recentlyViewedLimit = recentlyViewedLimit,
+                bottomPadding = paddingValues.calculateBottomPadding(),
                 onSearchClicked = { ean ->
                     navController.navigate("details/$ean")
                 },
@@ -175,6 +182,7 @@ fun AppNavigation(
             SearchScreen(
                 viewModel = searchViewModel,
                 settingsViewModel = settingsViewModel,
+                bottomPadding = paddingValues.calculateBottomPadding(),
                 onProductClicked = { ean ->
                     navController.navigate("details/$ean")
                 }
@@ -182,7 +190,8 @@ fun AppNavigation(
         }
         composable("settings_route") {
             SettingsScreen(
-                viewModel = settingsViewModel
+                viewModel = settingsViewModel,
+                bottomPadding = paddingValues.calculateBottomPadding()
             )
         }
         composable("comparison") {
@@ -190,6 +199,7 @@ fun AppNavigation(
             ComparisonScreen(
                 viewModel = comparisonViewModel,
                 showHighlightedIngredients = showHighlightedIngredients,
+                bottomPadding = paddingValues.calculateBottomPadding(),
                 onProductClicked = { ean ->
                     navController.navigate("details/$ean")
                 }

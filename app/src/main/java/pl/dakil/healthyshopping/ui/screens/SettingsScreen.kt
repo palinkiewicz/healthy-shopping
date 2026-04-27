@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.platform.LocalContext
@@ -36,7 +37,8 @@ import pl.dakil.healthyshopping.data.repository.DetailsSection
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel
+    viewModel: SettingsViewModel,
+    bottomPadding: Dp = 0.dp
 ) {
     val themePreset by viewModel.themePreset.collectAsState()
     val showGroupedIngredients by viewModel.showGroupedIngredients.collectAsState()
@@ -57,6 +59,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .padding(bottom = bottomPadding)
                 .verticalScroll(rememberScrollState())
         ) {
             

@@ -24,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import pl.dakil.healthyshopping.data.model.SearchProduct
@@ -46,6 +47,7 @@ import androidx.compose.foundation.layout.FlowRow
 fun SearchScreen(
     viewModel: SearchViewModel,
     settingsViewModel: SettingsViewModel,
+    bottomPadding: Dp = 0.dp,
     onProductClicked: (String) -> Unit
 ) {
     val query by viewModel.searchQuery.collectAsState()
@@ -62,6 +64,7 @@ fun SearchScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .padding(bottom = bottomPadding)
         ) {
             // Search Bar
             OutlinedTextField(

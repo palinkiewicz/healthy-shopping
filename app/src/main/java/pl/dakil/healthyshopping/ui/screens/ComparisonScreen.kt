@@ -18,6 +18,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -35,6 +36,7 @@ import pl.dakil.healthyshopping.ui.theme.*
 fun ComparisonScreen(
     viewModel: ComparisonViewModel,
     showHighlightedIngredients: Boolean,
+    bottomPadding: Dp = 0.dp,
     onProductClicked: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -62,7 +64,8 @@ fun ComparisonScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
+                .padding(padding)
+                .padding(bottom = bottomPadding),
             contentAlignment = Alignment.Center
         ) {
             when (uiState) {
