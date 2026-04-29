@@ -57,6 +57,7 @@ fun SearchScreen(
     val visibleNutrients by settingsViewModel.visibleNutrients.collectAsState()
     val nutrientColors by settingsViewModel.nutrientColors.collectAsState()
     val showTemporaryNutrient by settingsViewModel.showTemporaryNutrient.collectAsState()
+    val uniformNutrientWidth by settingsViewModel.uniformNutrientWidth.collectAsState()
 
     val effectiveVisibleNutrients = remember(visibleNutrients, sort, showTemporaryNutrient) {
         val nutrientId = sort.nutrientId
@@ -142,6 +143,8 @@ fun SearchScreen(
                                         product = product,
                                         visibleNutrientIds = effectiveVisibleNutrients,
                                         nutrientColors = nutrientColors,
+                                        sort = sort,
+                                        uniformNutrientWidth = uniformNutrientWidth,
                                         onClick = { product.ean?.let { onProductClicked(it) } }
                                     )
                                 }
@@ -159,6 +162,8 @@ fun ProductCard(
     product: SearchProduct,
     visibleNutrientIds: Set<String>,
     nutrientColors: Map<String, String>,
+    sort: SearchSort,
+    uniformNutrientWidth: Boolean,
     onClick: () -> Unit
 ) {
     Card(
@@ -218,7 +223,9 @@ fun ProductCard(
                 NutrientPreviewRow(
                     product = product,
                     visibleNutrientIds = visibleNutrientIds,
-                    nutrientColors = nutrientColors
+                    nutrientColors = nutrientColors,
+                    sort = sort,
+                    uniformNutrientWidth = uniformNutrientWidth
                 )
             }
 
@@ -413,7 +420,9 @@ fun SortChip(
 fun NutrientPreviewRow(
     product: SearchProduct,
     visibleNutrientIds: Set<String>,
-    nutrientColors: Map<String, String>
+    nutrientColors: Map<String, String>,
+    sort: SearchSort,
+    uniformNutrientWidth: Boolean
 ) {
     val nutrientsToShow = product.nutrients?.nutrients?.filter { 
         visibleNutrientIds.contains(it.id) 
@@ -434,12 +443,16 @@ fun NutrientPreviewRow(
             
             val value = nutrient.details?.value ?: ""
             val unit = nutrient.details?.unit ?: ""
+            val displayValue = if (value.isEmpty()) "-" else "$value $unit"
+            
+            val isSortedNutrient = sort.type == SortType.NUTRIENT && sort.nutrientId == nutrient.id
             
             Text(
-                text = "$value $unit",
+                text = displayValue,
                 style = MaterialTheme.typography.labelMedium,
                 color = color,
-                fontWeight = FontWeight.Bold
+                fontWeight = if (isSortedNutrient) FontWeight.Bold else FontWeight.Normal,
+                modifier = if (uniformNutrientWidth) Modifier.widthIn(min = 72.dp) else Modifier
             )
         }
     }

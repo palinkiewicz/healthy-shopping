@@ -108,6 +108,11 @@ class SettingsRepository(context: Context) {
     )
     val showTemporaryNutrient: StateFlow<Boolean> = _showTemporaryNutrient.asStateFlow()
 
+    private val _uniformNutrientWidth = MutableStateFlow(
+        prefs.getBoolean("uniform_nutrient_width", false)
+    )
+    val uniformNutrientWidth: StateFlow<Boolean> = _uniformNutrientWidth.asStateFlow()
+
     fun setThemePreset(preset: ThemePreset) {
         prefs.edit().putString("theme_preset", preset.name).apply()
         _themePreset.value = preset
@@ -136,6 +141,11 @@ class SettingsRepository(context: Context) {
     fun setShowTemporaryNutrient(enabled: Boolean) {
         prefs.edit().putBoolean("show_temporary_nutrient", enabled).apply()
         _showTemporaryNutrient.value = enabled
+    }
+
+    fun setUniformNutrientWidth(enabled: Boolean) {
+        prefs.edit().putBoolean("uniform_nutrient_width", enabled).apply()
+        _uniformNutrientWidth.value = enabled
     }
 
     fun addToComparison(ean: String) {

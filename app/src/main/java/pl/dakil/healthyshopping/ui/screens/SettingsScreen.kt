@@ -243,6 +243,14 @@ fun SettingsScreen(
                 checked = showTemporaryNutrient,
                 onCheckedChange = { viewModel.setShowTemporaryNutrient(it) }
             )
+
+            val uniformNutrientWidth by viewModel.uniformNutrientWidth.collectAsState()
+            SettingsItemSwitch(
+                title = "Wyrównaj podgląd składników",
+                subtitle = "Każda etykieta będzie miała minimalną szerokość, co ułatwi porównywanie wartości na pierwszy rzut oka.",
+                checked = uniformNutrientWidth,
+                onCheckedChange = { viewModel.setUniformNutrientWidth(it) }
+            )
         }
     }
 
