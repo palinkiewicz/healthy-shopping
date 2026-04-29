@@ -67,7 +67,11 @@ fun DetailsScreen(
                 title = { Text("Analiza produktu") },
                 navigationIcon = {
                     IconButton(onClick = onBackClicked) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wróć")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Wróć",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     }
                 },
                 actions = {
@@ -94,7 +98,11 @@ fun DetailsScreen(
                                 val shareIntent = Intent.createChooser(sendIntent, null)
                                 context.startActivity(shareIntent)
                             }) {
-                                Icon(Icons.Default.Share, contentDescription = "Udostępnij")
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "Udostępnij",
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
                             }
                         }
                     }

@@ -47,7 +47,11 @@ fun ComparisonScreen(
                 actions = {
                     if (uiState is ComparisonUiState.Success && (uiState as ComparisonUiState.Success).products.isNotEmpty()) {
                         IconButton(onClick = { viewModel.clearComparison() }) {
-                            Icon(Icons.Default.DeleteSweep, contentDescription = "Wyczyść wszystko")
+                            Icon(
+                                imageVector = Icons.Default.DeleteSweep,
+                                contentDescription = "Wyczyść wszystko",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
                         }
                     }
                 },
