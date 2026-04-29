@@ -1,5 +1,7 @@
 package pl.dakil.healthyshopping.ui.screens
 
+import kotlinx.coroutines.launch
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.clickable
@@ -7,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import android.content.Intent
+import android.content.ClipData
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -19,6 +22,7 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.AddChart
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.*
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
@@ -33,7 +37,11 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.platform.ClipEntry
 import coil.compose.AsyncImage
+import pl.dakil.healthyshopping.data.model.Nutrient
 import pl.dakil.healthyshopping.data.model.ProductResponse
 import pl.dakil.healthyshopping.ui.viewmodel.ProductUiState
 import pl.dakil.healthyshopping.ui.theme.*
@@ -141,6 +149,9 @@ fun ProductDetailsContent(
     hiddenDetailsSections: Set<String>,
     onImageClicked: (String) -> Unit
 ) {
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -376,12 +387,33 @@ fun ProductDetailsContent(
                     // Macronutrients
                     product.nutrientValues?.nutrients?.let { nutrients ->
                         if (nutrients.isNotEmpty()) {
-                            Text(
-                                text = "Wartości odżywcze na 100${product.nutrientValues.per100Unit ?: "g"}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Wartości odżywcze na 100${product.nutrientValues.per100Unit ?: "g"}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                IconButton(
+                                    onClick = {
+                                        val textToCopy = formatNutritionalValuesForCopy(product)
+                                        scope.launch {
+                                            clipboard?.setClipEntry(ClipEntry(ClipData.newPlainText("Nutritional Values", textToCopy)))
+                                        }
+                                    },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ContentCopy,
+                                        contentDescription = "Kopiuj wartości odżywcze",
+                                        modifier = Modifier.size(18.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
 
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
@@ -407,7 +439,7 @@ fun ProductDetailsContent(
                                                     style = MaterialTheme.typography.bodyMedium
                                                 )
                                                 Text(
-                                                    text = "${nut.details?.value ?: "-"} ${nut.details?.unit ?: ""}",
+                                                    text = if (nut.details?.value.isNullOrBlank()) "-" else "${nut.details?.value} ${nut.details?.unit ?: ""}",
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     fontWeight = FontWeight.Bold
                                                 )
@@ -454,12 +486,33 @@ fun ProductDetailsContent(
 
                 "ingredients_list" -> {
                     // Ingredients List
-                    Text(
-                        text = "Lista Składników",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Lista Składników",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        IconButton(
+                            onClick = {
+                                val textToCopy = product.description ?: ""
+                                scope.launch {
+                                    clipboard?.setClipEntry(ClipEntry(ClipData.newPlainText("Ingredients", textToCopy)))
+                                }
+                            },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Kopiuj skład",
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                     
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -742,4 +795,44 @@ fun calculateRws(nutrientName: String, value: Double): Pair<Float, Color> {
     }
     
     return Pair(percentage, color)
+}
+
+fun getNutrientValue(nutrients: List<Nutrient>, keywords: List<String>): String {
+    val nut = nutrients.firstOrNull { n ->
+        val name = n.name?.lowercase() ?: ""
+        keywords.any { name.contains(it) }
+    }
+    return if (nut != null) {
+        val value = nut.details?.value
+        val unit = nut.details?.unit ?: ""
+        if (value.isNullOrBlank()) "-" else "$value $unit".trim()
+    } else {
+        "-"
+    }
+}
+
+fun formatNutritionalValuesForCopy(product: ProductResponse): String {
+    val nutrients = product.nutrientValues?.nutrients ?: emptyList()
+    val perUnit = product.nutrientValues?.per100Unit ?: "g"
+    
+    val kalorie = getNutrientValue(nutrients, listOf("kalorie", "energia", "energetyczna"))
+    val tluszcz = getNutrientValue(nutrients, listOf("tłuszcz"))
+    val nasycone = getNutrientValue(nutrients, listOf("nasycone"))
+    val weglowodany = getNutrientValue(nutrients, listOf("węglowodany"))
+    val cukry = getNutrientValue(nutrients, listOf("cukry"))
+    val blonnik = getNutrientValue(nutrients, listOf("błonnik"))
+    val bialko = getNutrientValue(nutrients, listOf("białko"))
+    val sol = getNutrientValue(nutrients, listOf("sól"))
+
+    return """
+        Wartości odżywcze na 100$perUnit
+        Kalorie: $kalorie
+        Tłuszcz: $tluszcz
+        w tym kwasy nasycone: $nasycone
+        Węglowodany: $weglowodany
+        w tym cukry: $cukry
+        Błonnik: $blonnik
+        Białko: $bialko
+        Sól: $sol
+    """.trimIndent()
 }
