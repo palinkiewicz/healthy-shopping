@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import android.content.Intent
@@ -24,6 +25,9 @@ import androidx.compose.material.icons.filled.AddChart
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.*
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,9 +45,12 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.platform.ClipEntry
 import coil.compose.AsyncImage
+import pl.dakil.healthyshopping.data.model.Ingredient
+import pl.dakil.healthyshopping.data.model.IngredientResponse
 import pl.dakil.healthyshopping.data.model.Nutrient
 import pl.dakil.healthyshopping.data.model.ProductResponse
 import pl.dakil.healthyshopping.ui.viewmodel.ProductUiState
+import pl.dakil.healthyshopping.ui.viewmodel.IngredientUiState
 import pl.dakil.healthyshopping.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,11 +63,36 @@ fun DetailsScreen(
     detailsSectionOrder: List<String>,
     hiddenDetailsSections: Set<String>,
     isProductInComparison: Boolean,
+    ingredientUiState: IngredientUiState,
     onToggleComparison: () -> Unit,
     onBackClicked: () -> Unit,
     onRetry: () -> Unit,
-    onImageClicked: (String) -> Unit
+    onImageClicked: (String) -> Unit,
+    onIngredientClicked: (Int) -> Unit,
+    onDismissIngredientDetails: () -> Unit
 ) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    var showSheet by remember { mutableStateOf(false) }
+
+    LaunchedEffect(ingredientUiState) {
+        if (ingredientUiState is IngredientUiState.Success || ingredientUiState is IngredientUiState.Loading || ingredientUiState is IngredientUiState.Error) {
+            showSheet = true
+        }
+    }
+
+    if (showSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showSheet = false
+                onDismissIngredientDetails()
+            },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ) {
+            IngredientDetailsBottomSheet(uiState = ingredientUiState)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -135,7 +167,8 @@ fun DetailsScreen(
                         showHighlightedIngredients = showHighlightedIngredients,
                         detailsSectionOrder = detailsSectionOrder,
                         hiddenDetailsSections = hiddenDetailsSections,
-                        onImageClicked = onImageClicked
+                        onImageClicked = onImageClicked,
+                        onIngredientClicked = onIngredientClicked
                     )
                 }
                 is ProductUiState.Error -> {
@@ -155,7 +188,8 @@ fun ProductDetailsContent(
     showHighlightedIngredients: Boolean,
     detailsSectionOrder: List<String>,
     hiddenDetailsSections: Set<String>,
-    onImageClicked: (String) -> Unit
+    onImageClicked: (String) -> Unit,
+    onIngredientClicked: (Int) -> Unit
 ) {
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
@@ -648,13 +682,18 @@ fun ProductDetailsContent(
                                             }
                                             Column(modifier = Modifier.padding(12.dp)) {
                                                 list.forEach { ing ->
-                                                    Text(
-                                                        text = "• ${ing.displayName ?: ing.name ?: "Nieznany"}",
-                                                        style = MaterialTheme.typography.bodyMedium,
-                                                        modifier = Modifier.padding(vertical = 2.dp)
-                                                    )
+                                                     Text(
+                                                         text = "• ${ing.displayName ?: ing.name ?: "Nieznany"}",
+                                                         style = MaterialTheme.typography.bodyMedium,
+                                                         modifier = Modifier
+                                                             .fillMaxWidth()
+                                                             .clickable(enabled = ing.id != null) { 
+                                                                 ing.id?.let { onIngredientClicked(it) } 
+                                                             }
+                                                             .padding(vertical = 4.dp)
+                                                     )
                                                 }
-                                            }
+                                             }
                                         }
                                     }
                                 }
@@ -675,6 +714,9 @@ fun ProductDetailsContent(
                                             .fillMaxWidth()
                                             .padding(vertical = 4.dp)
                                             .clip(RoundedCornerShape(8.dp))
+                                            .clickable(enabled = ing.id != null) { 
+                                                ing.id?.let { onIngredientClicked(it) } 
+                                            }
                                             .padding(horizontal = 8.dp, vertical = 6.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween
@@ -843,4 +885,147 @@ fun formatNutritionalValuesForCopy(product: ProductResponse): String {
         Białko: $bialko
         Sól: $sol
     """.trimIndent()
+}
+
+@Composable
+fun IngredientDetailsBottomSheet(uiState: IngredientUiState) {
+    when (uiState) {
+        is IngredientUiState.Idle -> {}
+        is IngredientUiState.Loading -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        is IngredientUiState.Success -> {
+            val ingredient = uiState.ingredient
+            val level = ingredient.harmfulLevel ?: 0
+            val isDarkTheme = isSystemInDarkTheme()
+            val (accentColor, textColor) = when (level) {
+                1 -> if (isDarkTheme) ingredient_dark_green to ingredient_dark_onGreen else ingredient_light_green to ingredient_light_onGreen
+                2 -> if (isDarkTheme) ingredient_dark_yellow to ingredient_dark_onYellow else ingredient_light_yellow to ingredient_light_onYellow
+                3 -> if (isDarkTheme) ingredient_dark_orange to ingredient_dark_onOrange else ingredient_light_orange to ingredient_light_onOrange
+                4, 5 -> if (isDarkTheme) ingredient_dark_red to ingredient_dark_onRed else ingredient_light_red to ingredient_light_onRed
+                else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+            }
+
+            val harmfulText = when(level) {
+                1 -> "Korzystny wpływ na zdrowie"
+                2 -> "Neutralny wpływ na zdrowie"
+                3 -> "Podejrzany składnik"
+                4 -> "Szkodliwy składnik"
+                5 -> "Bardzo szkodliwy składnik"
+                else -> "Brak danych o szkodliwości"
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                contentPadding = PaddingValues(bottom = 48.dp)
+            ) {
+                item {
+                    Text(
+                        text = ingredient.displayName ?: ingredient.name ?: "Nieznany",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                
+                if (!ingredient.name.isNullOrBlank() && ingredient.name.startsWith("E", ignoreCase = true) && ingredient.name != ingredient.displayName) {
+                    item {
+                        Text(
+                            text = ingredient.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
+                }
+
+                item { Spacer(modifier = Modifier.height(16.dp)) }
+
+                item {
+                    Surface(
+                        color = accentColor,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (level >= 4) Icons.Default.Warning else Icons.Default.Info,
+                                contentDescription = null,
+                                tint = textColor,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = harmfulText,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = textColor
+                            )
+                        }
+                    }
+                }
+
+                if (!ingredient.description.isNullOrBlank()) {
+                    item {
+                        Text(
+                            text = "Opis",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
+                        )
+                    }
+                    item {
+                        Text(
+                            text = ingredient.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                if (!ingredient.influence.isNullOrBlank()) {
+                    item {
+                        Text(
+                            text = "Wpływ na zdrowie",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
+                        )
+                    }
+                    item {
+                        Text(
+                            text = ingredient.influence,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+        is IngredientUiState.Error -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = uiState.message,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
 }
