@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import android.content.Intent
@@ -70,7 +71,7 @@ fun DetailsScreen(
     onIngredientClicked: (Int) -> Unit,
     onDismissIngredientDetails: () -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var showSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(ingredientUiState) {
@@ -888,57 +889,56 @@ fun formatNutritionalValuesForCopy(product: ProductResponse): String {
 
 @Composable
 fun IngredientDetailsBottomSheet(uiState: IngredientUiState) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 32.dp, start = 24.dp, end = 24.dp)
-    ) {
-        when (uiState) {
-            is IngredientUiState.Idle -> {}
-            is IngredientUiState.Loading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+    when (uiState) {
+        is IngredientUiState.Idle -> {}
+        is IngredientUiState.Loading -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
-            is IngredientUiState.Success -> {
-                val ingredient = uiState.ingredient
-                val level = ingredient.harmfulLevel ?: 0
-                val isDarkTheme = isSystemInDarkTheme()
-                val (accentColor, textColor) = when (level) {
-                    1 -> if (isDarkTheme) ingredient_dark_green to ingredient_dark_onGreen else ingredient_light_green to ingredient_light_onGreen
-                    2 -> if (isDarkTheme) ingredient_dark_yellow to ingredient_dark_onYellow else ingredient_light_yellow to ingredient_light_onYellow
-                    3 -> if (isDarkTheme) ingredient_dark_orange to ingredient_dark_onOrange else ingredient_light_orange to ingredient_light_onOrange
-                    4, 5 -> if (isDarkTheme) ingredient_dark_red to ingredient_dark_onRed else ingredient_light_red to ingredient_light_onRed
-                    else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
-                }
+        }
+        is IngredientUiState.Success -> {
+            val ingredient = uiState.ingredient
+            val level = ingredient.harmfulLevel ?: 0
+            val isDarkTheme = isSystemInDarkTheme()
+            val (accentColor, textColor) = when (level) {
+                1 -> if (isDarkTheme) ingredient_dark_green to ingredient_dark_onGreen else ingredient_light_green to ingredient_light_onGreen
+                2 -> if (isDarkTheme) ingredient_dark_yellow to ingredient_dark_onYellow else ingredient_light_yellow to ingredient_light_onYellow
+                3 -> if (isDarkTheme) ingredient_dark_orange to ingredient_dark_onOrange else ingredient_light_orange to ingredient_light_onOrange
+                4, 5 -> if (isDarkTheme) ingredient_dark_red to ingredient_dark_onRed else ingredient_light_red to ingredient_light_onRed
+                else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+            }
 
-                val harmfulText = when(level) {
-                    1 -> "Korzystny wpływ na zdrowie"
-                    2 -> "Neutralny wpływ na zdrowie"
-                    3 -> "Podejrzany składnik"
-                    4 -> "Szkodliwy składnik"
-                    5 -> "Bardzo szkodliwy składnik"
-                    else -> "Brak danych o szkodliwości"
-                }
+            val harmfulText = when(level) {
+                1 -> "Korzystny wpływ na zdrowie"
+                2 -> "Neutralny wpływ na zdrowie"
+                3 -> "Podejrzany składnik"
+                4 -> "Szkodliwy składnik"
+                5 -> "Bardzo szkodliwy składnik"
+                else -> "Brak danych o szkodliwości"
+            }
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                contentPadding = PaddingValues(bottom = 48.dp)
+            ) {
+                item {
                     Text(
                         text = ingredient.displayName ?: ingredient.name ?: "Nieznany",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    
-                    if (!ingredient.name.isNullOrBlank() && ingredient.name.startsWith("E", ignoreCase = true) && ingredient.name != ingredient.displayName) {
+                }
+                
+                if (!ingredient.name.isNullOrBlank() && ingredient.name.startsWith("E", ignoreCase = true) && ingredient.name != ingredient.displayName) {
+                    item {
                         Text(
                             text = ingredient.name,
                             style = MaterialTheme.typography.titleMedium,
@@ -946,9 +946,11 @@ fun IngredientDetailsBottomSheet(uiState: IngredientUiState) {
                             modifier = Modifier.padding(top = 2.dp)
                         )
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                item { Spacer(modifier = Modifier.height(16.dp)) }
 
+                item {
                     Surface(
                         color = accentColor,
                         shape = RoundedCornerShape(8.dp)
@@ -972,28 +974,36 @@ fun IngredientDetailsBottomSheet(uiState: IngredientUiState) {
                             )
                         }
                     }
+                }
 
-                    if (!ingredient.description.isNullOrBlank()) {
+                if (!ingredient.description.isNullOrBlank()) {
+                    item {
                         Text(
                             text = "Opis",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
                         )
+                    }
+                    item {
                         Text(
                             text = ingredient.description,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
 
-                    if (!ingredient.influence.isNullOrBlank()) {
+                if (!ingredient.influence.isNullOrBlank()) {
+                    item {
                         Text(
                             text = "Wpływ na zdrowie",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
                         )
+                    }
+                    item {
                         Text(
                             text = ingredient.influence,
                             style = MaterialTheme.typography.bodyMedium,
@@ -1002,19 +1012,19 @@ fun IngredientDetailsBottomSheet(uiState: IngredientUiState) {
                     }
                 }
             }
-            is IngredientUiState.Error -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = uiState.message,
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center
-                    )
-                }
+        }
+        is IngredientUiState.Error -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = uiState.message,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
