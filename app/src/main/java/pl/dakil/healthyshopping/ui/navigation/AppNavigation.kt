@@ -224,6 +224,7 @@ fun AppNavigation(
         ) { backStackEntry ->
             val ean = backStackEntry.arguments?.getString("ean") ?: ""
             val uiState by viewModel.uiState.collectAsState()
+            val ingredientUiState by viewModel.ingredientUiState.collectAsState()
             val showGroupedIngredients by settingsViewModel.showGroupedIngredients.collectAsState()
             val showNutritionProgressBars by settingsViewModel.showNutritionProgressBars.collectAsState()
             val showHighlightedIngredients by settingsViewModel.showHighlightedIngredients.collectAsState()
@@ -257,6 +258,7 @@ fun AppNavigation(
                 detailsSectionOrder = detailsSectionOrder,
                 hiddenDetailsSections = hiddenDetailsSections,
                 isProductInComparison = isProductInComparison,
+                ingredientUiState = ingredientUiState,
                 onToggleComparison = {
                     if (isProductInComparison) {
                         settingsViewModel.removeFromComparison(ean)
@@ -289,6 +291,12 @@ fun AppNavigation(
                 onImageClicked = { url ->
                     val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
                     navController.navigate("full_screen_image/$encodedUrl")
+                },
+                onIngredientClicked = { id ->
+                    viewModel.getIngredient(id)
+                },
+                onDismissIngredientDetails = {
+                    viewModel.resetIngredientState()
                 }
             )
         }
