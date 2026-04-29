@@ -103,6 +103,11 @@ class SettingsRepository(context: Context) {
     )
     val recentlyViewedItems: StateFlow<List<SearchProduct>> = _recentlyViewedItems.asStateFlow()
 
+    private val _showTemporaryNutrient = MutableStateFlow(
+        prefs.getBoolean("show_temporary_nutrient", true)
+    )
+    val showTemporaryNutrient: StateFlow<Boolean> = _showTemporaryNutrient.asStateFlow()
+
     fun setThemePreset(preset: ThemePreset) {
         prefs.edit().putString("theme_preset", preset.name).apply()
         _themePreset.value = preset
@@ -126,6 +131,11 @@ class SettingsRepository(context: Context) {
     fun setShowProductTags(enabled: Boolean) {
         prefs.edit().putBoolean("show_product_tags", enabled).apply()
         _showProductTags.value = enabled
+    }
+
+    fun setShowTemporaryNutrient(enabled: Boolean) {
+        prefs.edit().putBoolean("show_temporary_nutrient", enabled).apply()
+        _showTemporaryNutrient.value = enabled
     }
 
     fun addToComparison(ean: String) {

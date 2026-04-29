@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +56,16 @@ fun SearchScreen(
     val sort by viewModel.sort.collectAsState()
     val visibleNutrients by settingsViewModel.visibleNutrients.collectAsState()
     val nutrientColors by settingsViewModel.nutrientColors.collectAsState()
+    val showTemporaryNutrient by settingsViewModel.showTemporaryNutrient.collectAsState()
+
+    val effectiveVisibleNutrients = remember(visibleNutrients, sort, showTemporaryNutrient) {
+        val nutrientId = sort.nutrientId
+        if (showTemporaryNutrient && sort.type == SortType.NUTRIENT && nutrientId != null) {
+            visibleNutrients + nutrientId
+        } else {
+            visibleNutrients
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -129,7 +140,7 @@ fun SearchScreen(
                                 items(state.products) { product ->
                                     ProductCard(
                                         product = product,
-                                        visibleNutrientIds = visibleNutrients,
+                                        visibleNutrientIds = effectiveVisibleNutrients,
                                         nutrientColors = nutrientColors,
                                         onClick = { product.ean?.let { onProductClicked(it) } }
                                     )

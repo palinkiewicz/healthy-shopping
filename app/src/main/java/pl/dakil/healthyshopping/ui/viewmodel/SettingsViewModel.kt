@@ -19,6 +19,7 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
     val comparisonEans: StateFlow<Set<String>> = repository.comparisonEans
     val visibleNutrients: StateFlow<Set<String>> = repository.visibleNutrients
     val nutrientColors: StateFlow<Map<String, String>> = repository.nutrientColors
+    val showTemporaryNutrient: StateFlow<Boolean> = repository.showTemporaryNutrient
 
     val recentlyViewedLimit: StateFlow<Int> = repository.recentlyViewedLimit
     val recentlyViewedItems: StateFlow<List<SearchProduct>> = repository.recentlyViewedItems
@@ -44,6 +45,10 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
     fun setShowProductTags(enabled: Boolean) {
         repository.setShowProductTags(enabled)
+    }
+
+    fun setShowTemporaryNutrient(enabled: Boolean) {
+        repository.setShowTemporaryNutrient(enabled)
     }
 
     fun moveDetailsSection(fromIndex: Int, toIndex: Int) {

@@ -223,6 +223,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
 
+
             AVAILABLE_NUTRIENTS.forEach { nutrient ->
                 NutrientSettingItem(
                     name = nutrient.name,
@@ -232,6 +233,16 @@ fun SettingsScreen(
                     onColorChange = { viewModel.setNutrientColor(nutrient.id, it) }
                 )
             }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+
+            val showTemporaryNutrient by viewModel.showTemporaryNutrient.collectAsState()
+            SettingsItemSwitch(
+                title = "Pokaż sortowany składnik tymczasowo",
+                subtitle = "Jeśli sortujesz według składnika, który nie jest wybrany powyżej, zostanie on tymczasowo dodany do widoku.",
+                checked = showTemporaryNutrient,
+                onCheckedChange = { viewModel.setShowTemporaryNutrient(it) }
+            )
         }
     }
 

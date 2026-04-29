@@ -68,9 +68,6 @@ class SearchViewModel(
 
     fun setSort(sort: SearchSort) {
         _sort.value = sort
-        if (sort.type == SortType.NUTRIENT && sort.nutrientId != null) {
-            settingsRepository.setNutrientVisible(sort.nutrientId, true)
-        }
         applyCurrentSort()
     }
 
