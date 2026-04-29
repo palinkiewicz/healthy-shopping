@@ -33,6 +33,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import pl.dakil.healthyshopping.data.repository.DetailsSection
+import pl.dakil.healthyshopping.data.repository.SearchAutoFocusOption
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +50,9 @@ fun SettingsScreen(
     val nutrientColors by viewModel.nutrientColors.collectAsState()
     val detailsSectionOrder by viewModel.detailsSectionOrder.collectAsState()
     val hiddenDetailsSections by viewModel.hiddenDetailsSections.collectAsState()
+    val searchAutoFocusOption by viewModel.searchAutoFocusOption.collectAsState()
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showSearchFocusDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -251,6 +254,81 @@ fun SettingsScreen(
                 checked = uniformNutrientWidth,
                 onCheckedChange = { viewModel.setUniformNutrientWidth(it) }
             )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+
+            SettingsCategoryHeader("Wyszukiwarka")
+            
+            SettingsItemClickable(
+                title = "Automatyczne skupienie na szukaniu",
+                subtitle = getAutoFocusOptionDisplayName(searchAutoFocusOption),
+                onClick = { showSearchFocusDialog = true }
+            )
+        }
+    }
+
+    if (showSearchFocusDialog) {
+        Dialog(onDismissRequest = { showSearchFocusDialog = false }) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                ) {
+                    Text(
+                        text = "Automatyczne skupienie",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    SearchAutoFocusOption.entries.forEach { option ->
+                        key(option) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        viewModel.setSearchAutoFocusOption(option)
+                                        showSearchFocusDialog = false
+                                    }
+                                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = option == searchAutoFocusOption,
+                                    onClick = {
+                                        viewModel.setSearchAutoFocusOption(option)
+                                        showSearchFocusDialog = false
+                                    }
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = getAutoFocusOptionDisplayName(option),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    TextButton(
+                        onClick = { showSearchFocusDialog = false },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text("Anuluj")
+                    }
+                }
+            }
         }
     }
 
@@ -349,6 +427,14 @@ fun SettingsItemClickable(title: String, subtitle: String, onClick: () -> Unit) 
             Text(text = title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
             Text(text = subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
         }
+    }
+}
+
+fun getAutoFocusOptionDisplayName(option: SearchAutoFocusOption): String {
+    return when (option) {
+        SearchAutoFocusOption.NEVER -> "Nigdy"
+        SearchAutoFocusOption.EMPTY_FIELD -> "Gdy pole jest puste"
+        SearchAutoFocusOption.ALWAYS -> "Zawsze"
     }
 }
 

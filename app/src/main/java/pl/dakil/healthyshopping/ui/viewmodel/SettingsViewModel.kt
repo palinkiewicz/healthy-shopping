@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.StateFlow
 import pl.dakil.healthyshopping.data.repository.SettingsRepository
 import pl.dakil.healthyshopping.data.repository.ThemePreset
+import pl.dakil.healthyshopping.data.repository.SearchAutoFocusOption
 import pl.dakil.healthyshopping.data.model.SearchProduct
 
 class SettingsViewModel(private val repository: SettingsRepository) : ViewModel() {
@@ -21,6 +22,7 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
     val nutrientColors: StateFlow<Map<String, String>> = repository.nutrientColors
     val showTemporaryNutrient: StateFlow<Boolean> = repository.showTemporaryNutrient
     val uniformNutrientWidth: StateFlow<Boolean> = repository.uniformNutrientWidth
+    val searchAutoFocusOption: StateFlow<SearchAutoFocusOption> = repository.searchAutoFocusOption
 
     val recentlyViewedLimit: StateFlow<Int> = repository.recentlyViewedLimit
     val recentlyViewedItems: StateFlow<List<SearchProduct>> = repository.recentlyViewedItems
@@ -54,6 +56,10 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
     fun setUniformNutrientWidth(enabled: Boolean) {
         repository.setUniformNutrientWidth(enabled)
+    }
+
+    fun setSearchAutoFocusOption(option: SearchAutoFocusOption) {
+        repository.setSearchAutoFocusOption(option)
     }
 
     fun moveDetailsSection(fromIndex: Int, toIndex: Int) {

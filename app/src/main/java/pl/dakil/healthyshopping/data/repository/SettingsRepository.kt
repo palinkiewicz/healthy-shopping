@@ -39,6 +39,10 @@ enum class DetailsSection(val id: String, val label: String) {
     HARMFUL_INGREDIENTS("harmful_ingredients", "Szkodliwość składników")
 }
 
+enum class SearchAutoFocusOption {
+    NEVER, EMPTY_FIELD, ALWAYS
+}
+
 class SettingsRepository(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("settings_prefs", Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true }
@@ -113,6 +117,11 @@ class SettingsRepository(context: Context) {
     )
     val uniformNutrientWidth: StateFlow<Boolean> = _uniformNutrientWidth.asStateFlow()
 
+    private val _searchAutoFocusOption = MutableStateFlow(
+        SearchAutoFocusOption.valueOf(prefs.getString("search_auto_focus_option", SearchAutoFocusOption.EMPTY_FIELD.name) ?: SearchAutoFocusOption.EMPTY_FIELD.name)
+    )
+    val searchAutoFocusOption: StateFlow<SearchAutoFocusOption> = _searchAutoFocusOption.asStateFlow()
+
     fun setThemePreset(preset: ThemePreset) {
         prefs.edit().putString("theme_preset", preset.name).apply()
         _themePreset.value = preset
@@ -146,6 +155,11 @@ class SettingsRepository(context: Context) {
     fun setUniformNutrientWidth(enabled: Boolean) {
         prefs.edit().putBoolean("uniform_nutrient_width", enabled).apply()
         _uniformNutrientWidth.value = enabled
+    }
+
+    fun setSearchAutoFocusOption(option: SearchAutoFocusOption) {
+        prefs.edit().putString("search_auto_focus_option", option.name).apply()
+        _searchAutoFocusOption.value = option
     }
 
     fun addToComparison(ean: String) {

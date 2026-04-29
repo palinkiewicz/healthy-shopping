@@ -42,6 +42,14 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
+import pl.dakil.healthyshopping.data.repository.SearchAutoFocusOption
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,6 +66,33 @@ fun SearchScreen(
     val nutrientColors by settingsViewModel.nutrientColors.collectAsState()
     val showTemporaryNutrient by settingsViewModel.showTemporaryNutrient.collectAsState()
     val uniformNutrientWidth by settingsViewModel.uniformNutrientWidth.collectAsState()
+    val searchAutoFocusOption by settingsViewModel.searchAutoFocusOption.collectAsState()
+
+    var textFieldValue by remember { mutableStateOf(TextFieldValue(query)) }
+
+    LaunchedEffect(query) {
+        if (textFieldValue.text != query) {
+            textFieldValue = textFieldValue.copy(text = query)
+        }
+    }
+
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        val shouldFocus = when (searchAutoFocusOption) {
+            SearchAutoFocusOption.ALWAYS -> true
+            SearchAutoFocusOption.EMPTY_FIELD -> query.isEmpty()
+            SearchAutoFocusOption.NEVER -> false
+        }
+        if (shouldFocus) {
+            focusRequester.requestFocus()
+            if (searchAutoFocusOption == SearchAutoFocusOption.ALWAYS) {
+                textFieldValue = textFieldValue.copy(
+                    selection = TextRange(textFieldValue.text.length)
+                )
+            }
+        }
+    }
 
     val effectiveVisibleNutrients = remember(visibleNutrients, sort, showTemporaryNutrient) {
         val nutrientId = sort.nutrientId
@@ -80,11 +115,17 @@ fun SearchScreen(
         ) {
             // Search Bar
             OutlinedTextField(
-                value = query,
-                onValueChange = { viewModel.onSearchQueryChange(it) },
+                value = textFieldValue,
+                onValueChange = { 
+                    textFieldValue = it
+                    if (it.text != query) {
+                        viewModel.onSearchQueryChange(it.text)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .focusRequester(focusRequester),
                 placeholder = { Text("Wpisz nazwę produktu...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Szukaj") },
                 shape = RoundedCornerShape(16.dp),
