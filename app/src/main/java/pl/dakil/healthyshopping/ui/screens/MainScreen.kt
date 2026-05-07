@@ -171,7 +171,6 @@ fun MainScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
-//                        shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )

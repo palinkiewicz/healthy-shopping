@@ -183,6 +183,7 @@ fun AppNavigation(
                 recentlyViewedLimit = recentlyViewedLimit,
                 bottomPadding = paddingValues.calculateBottomPadding(),
                 onSearchClicked = { ean ->
+                    viewModel.resetState()
                     navController.navigate("details/$ean")
                 },
                 onScanClicked = {
@@ -196,6 +197,7 @@ fun AppNavigation(
                 settingsViewModel = settingsViewModel,
                 bottomPadding = paddingValues.calculateBottomPadding(),
                 onProductClicked = { ean ->
+                    viewModel.resetState()
                     navController.navigate("details/$ean")
                 }
             )
@@ -246,6 +248,7 @@ fun AppNavigation(
                 showHighlightedIngredients = showHighlightedIngredients,
                 bottomPadding = paddingValues.calculateBottomPadding(),
                 onProductClicked = { ean ->
+                    viewModel.resetState()
                     navController.navigate("details/$ean")
                 }
             )
@@ -255,6 +258,7 @@ fun AppNavigation(
                 onBarcodeDetected = { barcode ->
                     // Automatically search when scanned
                     navController.popBackStack("main", inclusive = false)
+                    viewModel.resetState()
                     navController.navigate("details/$barcode")
                 },
                 onBackClicked = {
@@ -313,7 +317,6 @@ fun AppNavigation(
                 },
                 onBackClicked = {
                     val hasPrevious = navController.previousBackStackEntry != null
-                    viewModel.resetState()
                     if (hasPrevious) {
                         navController.popBackStack()
                     } else {
