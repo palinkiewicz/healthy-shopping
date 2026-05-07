@@ -10,9 +10,12 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -129,63 +132,11 @@ fun AppNavigation(
             modifier = Modifier
                 .fillMaxSize()
                 .consumeWindowInsets(paddingValues),
-        enterTransition = {
-            val fromRoute = initialState.destination.route
-            val toRoute = targetState.destination.route
-            if (fromRoute in bottomBarRoutes && toRoute in bottomBarRoutes) {
-                fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing)) + 
-                scaleIn(initialScale = 0.92f, animationSpec = tween(300, easing = FastOutSlowInEasing))
-            } else {
-                slideIntoContainer(
-                    AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(400, easing = FastOutSlowInEasing)
-                ) + fadeIn(animationSpec = tween(400)) + 
-                scaleIn(initialScale = 0.95f, animationSpec = tween(400, easing = FastOutSlowInEasing))
-            }
-        },
-        exitTransition = {
-            val fromRoute = initialState.destination.route
-            val toRoute = targetState.destination.route
-            if (fromRoute in bottomBarRoutes && toRoute in bottomBarRoutes) {
-                fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing)) + 
-                scaleOut(targetScale = 0.92f, animationSpec = tween(300, easing = FastOutSlowInEasing))
-            } else {
-                slideOutOfContainer(
-                    AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(400, easing = FastOutSlowInEasing)
-                ) + fadeOut(animationSpec = tween(400)) +
-                scaleOut(targetScale = 0.95f, animationSpec = tween(400, easing = FastOutSlowInEasing))
-            }
-        },
-        popEnterTransition = {
-            val fromRoute = initialState.destination.route
-            val toRoute = targetState.destination.route
-            if (fromRoute in bottomBarRoutes && toRoute in bottomBarRoutes) {
-                fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing)) + 
-                scaleIn(initialScale = 0.92f, animationSpec = tween(300, easing = FastOutSlowInEasing))
-            } else {
-                slideIntoContainer(
-                    AnimatedContentTransitionScope.SlideDirection.Right,
-                    animationSpec = tween(400, easing = FastOutSlowInEasing)
-                ) + fadeIn(animationSpec = tween(400)) +
-                scaleIn(initialScale = 0.95f, animationSpec = tween(400, easing = FastOutSlowInEasing))
-            }
-        },
-        popExitTransition = {
-            val fromRoute = initialState.destination.route
-            val toRoute = targetState.destination.route
-            if (fromRoute in bottomBarRoutes && toRoute in bottomBarRoutes) {
-                fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing)) + 
-                scaleOut(targetScale = 0.92f, animationSpec = tween(300, easing = FastOutSlowInEasing))
-            } else {
-                slideOutOfContainer(
-                    AnimatedContentTransitionScope.SlideDirection.Right,
-                    animationSpec = tween(400, easing = FastOutSlowInEasing)
-                ) + fadeOut(animationSpec = tween(400)) +
-                scaleOut(targetScale = 0.95f, animationSpec = tween(400, easing = FastOutSlowInEasing))
-            }
-        }
-    ) {
+            enterTransition = { defaultEnterTransition(bottomBarRoutes) },
+            exitTransition = { defaultExitTransition(bottomBarRoutes) },
+            popEnterTransition = { defaultEnterTransition(bottomBarRoutes, AnimatedContentTransitionScope.SlideDirection.Right) },
+            popExitTransition = { defaultExitTransition(bottomBarRoutes, AnimatedContentTransitionScope.SlideDirection.Right) }
+        ) {
         composable("main") {
             val recentlyViewedItems by settingsViewModel.recentlyViewedItems.collectAsState()
             val recentlyViewedLimit by settingsViewModel.recentlyViewedLimit.collectAsState()
@@ -371,5 +322,45 @@ fun AppNavigation(
             )
         }
         }
+    }
+}
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.defaultEnterTransition(
+    bottomBarRoutes: List<String?>,
+    direction: AnimatedContentTransitionScope.SlideDirection = AnimatedContentTransitionScope.SlideDirection.Left
+): EnterTransition {
+    val fromRoute = initialState.destination.route
+    val toRoute = targetState.destination.route
+    val isBottomBarTransition = fromRoute in bottomBarRoutes && toRoute in bottomBarRoutes
+
+    return if (isBottomBarTransition) {
+        fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing)) +
+                scaleIn(initialScale = 0.92f, animationSpec = tween(300, easing = FastOutSlowInEasing))
+    } else {
+        slideIntoContainer(
+            direction,
+            animationSpec = tween(400, easing = FastOutSlowInEasing)
+        ) + fadeIn(animationSpec = tween(400)) +
+                scaleIn(initialScale = 0.85f, animationSpec = tween(400, easing = FastOutSlowInEasing))
+    }
+}
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.defaultExitTransition(
+    bottomBarRoutes: List<String?>,
+    direction: AnimatedContentTransitionScope.SlideDirection = AnimatedContentTransitionScope.SlideDirection.Left
+): ExitTransition {
+    val fromRoute = initialState.destination.route
+    val toRoute = targetState.destination.route
+    val isBottomBarTransition = fromRoute in bottomBarRoutes && toRoute in bottomBarRoutes
+
+    return if (isBottomBarTransition) {
+        fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing)) +
+                scaleOut(targetScale = 0.92f, animationSpec = tween(300, easing = FastOutSlowInEasing))
+    } else {
+        slideOutOfContainer(
+            direction,
+            animationSpec = tween(400, easing = FastOutSlowInEasing)
+        ) + fadeOut(animationSpec = tween(400)) +
+                scaleOut(targetScale = 0.85f, animationSpec = tween(400, easing = FastOutSlowInEasing))
     }
 }
