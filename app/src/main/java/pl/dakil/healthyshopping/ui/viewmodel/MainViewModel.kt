@@ -16,14 +16,14 @@ sealed class ProductUiState {
     object Idle : ProductUiState()
     object Loading : ProductUiState()
     data class Success(val product: ProductResponse) : ProductUiState()
-    data class Error(val message: String) : ProductUiState()
+    data class Error(val errorType: pl.dakil.healthyshopping.data.model.ErrorType, val message: String? = null) : ProductUiState()
 }
 
 sealed class IngredientUiState {
     object Idle : IngredientUiState()
     object Loading : IngredientUiState()
     data class Success(val ingredient: IngredientResponse) : IngredientUiState()
-    data class Error(val message: String) : IngredientUiState()
+    data class Error(val errorType: pl.dakil.healthyshopping.data.model.ErrorType, val message: String? = null) : IngredientUiState()
 }
 
 class MainViewModel(
@@ -39,7 +39,7 @@ class MainViewModel(
 
     fun getProduct(ean: String) {
         if (ean.isBlank()) {
-            _uiState.value = ProductUiState.Error("Wpisz kod kreskowy")
+            _uiState.value = ProductUiState.Error(pl.dakil.healthyshopping.data.model.ErrorType.UNKNOWN, "Wpisz kod kreskowy")
             return
         }
 
@@ -52,7 +52,7 @@ class MainViewModel(
                     _uiState.value = ProductUiState.Success(product)
                 },
                 onFailure = { error ->
-                    _uiState.value = ProductUiState.Error(error.message ?: "Wystąpił nieznany błąd")
+                    _uiState.value = ProductUiState.Error(error.toErrorType(), error.message)
                 }
             )
         }
@@ -68,7 +68,7 @@ class MainViewModel(
                     _ingredientUiState.value = IngredientUiState.Success(ingredient)
                 },
                 onFailure = { error ->
-                    _ingredientUiState.value = IngredientUiState.Error(error.message ?: "Wystąpił nieznany błąd")
+                    _ingredientUiState.value = IngredientUiState.Error(error.toErrorType(), error.message)
                 }
             )
         }

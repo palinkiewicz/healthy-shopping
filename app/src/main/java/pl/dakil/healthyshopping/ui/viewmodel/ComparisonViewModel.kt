@@ -14,7 +14,7 @@ sealed interface ComparisonUiState {
     data object Idle : ComparisonUiState
     data object Loading : ComparisonUiState
     data class Success(val products: List<ProductResponse>) : ComparisonUiState
-    data class Error(val message: String) : ComparisonUiState
+    data class Error(val errorType: pl.dakil.healthyshopping.data.model.ErrorType, val message: String? = null) : ComparisonUiState
 }
 
 class ComparisonViewModel(
@@ -54,15 +54,15 @@ class ComparisonViewModel(
                 
                 val failed = results.filter { it.isFailure }
                 if (failed.isNotEmpty()) {
-                    val errorMessage = failed.first().exceptionOrNull()?.localizedMessage ?: "Nieznany błąd"
-                    _uiState.value = ComparisonUiState.Error("Wystąpił błąd podczas pobierania danych produktów: $errorMessage")
+                    val firstError = failed.first().exceptionOrNull()!!
+                    _uiState.value = ComparisonUiState.Error(firstError.toErrorType(), "Wystąpił błąd podczas pobierania danych produktów: ${firstError.message}")
                     return@launch
                 }
 
                 val products = results.map { it.getOrThrow() }
                 _uiState.value = ComparisonUiState.Success(products)
             } catch (e: Exception) {
-                _uiState.value = ComparisonUiState.Error("Wystąpił błąd systemowy: ${e.localizedMessage}")
+                _uiState.value = ComparisonUiState.Error(e.toErrorType(), "Wystąpił błąd systemowy: ${e.localizedMessage}")
             }
         }
     }

@@ -172,7 +172,11 @@ fun DetailsScreen(
                     )
                 }
                 is ProductUiState.Error -> {
-                    ErrorContent(uiState.message, onRetry)
+                    pl.dakil.healthyshopping.ui.components.StandardError(
+                        errorType = uiState.errorType,
+                        customMessage = uiState.message,
+                        onRetry = onRetry
+                    )
                 }
             }
         }
@@ -755,35 +759,6 @@ fun ProductDetailsContent(
     }
 }
 
-@Composable
-fun ErrorContent(message: String, onRetry: () -> Unit) {
-    Column(
-        modifier = Modifier.padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = Icons.Default.Info,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.error,
-            modifier = Modifier.size(64.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = message,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = onRetry,
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-        ) {
-            Text("Spróbuj ponownie")
-        }
-    }
-}
 
 fun translateIngredientColor(apiHex: String, isDark: Boolean): Pair<Color, Color> {
     return when (apiHex.uppercase()) {
@@ -1014,18 +989,13 @@ fun IngredientDetailsBottomSheet(uiState: IngredientUiState) {
             }
         }
         is IngredientUiState.Error -> {
-            Box(
+            pl.dakil.healthyshopping.ui.components.StandardError(
+                errorType = uiState.errorType,
+                customMessage = uiState.message,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = uiState.message,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center
-                )
-            }
+                    .padding(vertical = 32.dp)
+            )
         }
     }
 }

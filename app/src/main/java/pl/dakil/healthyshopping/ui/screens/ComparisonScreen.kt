@@ -88,8 +88,10 @@ fun ComparisonScreen(
                     }
                 }
                 is ComparisonUiState.Error -> {
-                    ErrorContent(
-                        message = (uiState as ComparisonUiState.Error).message,
+                    val state = uiState as ComparisonUiState.Error
+                    pl.dakil.healthyshopping.ui.components.StandardError(
+                        errorType = state.errorType,
+                        customMessage = state.message,
                         onRetry = { viewModel.refreshComparison() }
                     )
                 }

@@ -27,7 +27,7 @@ sealed interface SearchUiState {
     data object Idle : SearchUiState
     data object Loading : SearchUiState
     data class Success(val products: List<SearchProduct>) : SearchUiState
-    data class Error(val message: String) : SearchUiState
+    data class Error(val errorType: pl.dakil.healthyshopping.data.model.ErrorType, val message: String? = null) : SearchUiState
 }
 
 @OptIn(FlowPreview::class)
@@ -109,7 +109,7 @@ class SearchViewModel(
                 _uiState.value = SearchUiState.Success(sortProducts(allProducts, _sort.value))
             },
             onFailure = { error ->
-                _uiState.value = SearchUiState.Error(error.message ?: "Wystąpił błąd")
+                _uiState.value = SearchUiState.Error(error.toErrorType(), error.message)
             }
         )
     }

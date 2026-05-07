@@ -160,9 +160,9 @@ fun SearchScreen(
                         )
                     }
                     is SearchUiState.Error -> {
-                        Text(
-                            text = state.message,
-                            color = MaterialTheme.colorScheme.error,
+                        pl.dakil.healthyshopping.ui.components.StandardError(
+                            errorType = state.errorType,
+                            customMessage = state.message,
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
