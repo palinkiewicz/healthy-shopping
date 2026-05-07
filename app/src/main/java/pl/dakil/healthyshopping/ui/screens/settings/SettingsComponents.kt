@@ -122,6 +122,42 @@ fun SettingsCategoryItem(
     }
 }
 
+@Composable
+fun SettingsItemSlider(
+    title: String,
+    description: String,
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    valueRange: ClosedFloatingPointRange<Float>,
+    steps: Int = 0,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = description,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+        )
+        Slider(
+            value = value,
+            onValueChange = onValueChange,
+            valueRange = valueRange,
+            steps = steps,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Nutrient settings item
 // ---------------------------------------------------------------------------

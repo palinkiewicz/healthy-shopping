@@ -117,6 +117,11 @@ class SettingsRepository(context: Context) {
     )
     val uniformNutrientWidth: StateFlow<Boolean> = _uniformNutrientWidth.asStateFlow()
 
+    private val _nutrientWidth = MutableStateFlow(
+        prefs.getInt("nutrient_width", 72)
+    )
+    val nutrientWidth: StateFlow<Int> = _nutrientWidth.asStateFlow()
+
     private val _searchAutoFocusOption = MutableStateFlow(
         SearchAutoFocusOption.valueOf(prefs.getString("search_auto_focus_option", SearchAutoFocusOption.EMPTY_FIELD.name) ?: SearchAutoFocusOption.EMPTY_FIELD.name)
     )
@@ -155,6 +160,11 @@ class SettingsRepository(context: Context) {
     fun setUniformNutrientWidth(enabled: Boolean) {
         prefs.edit().putBoolean("uniform_nutrient_width", enabled).apply()
         _uniformNutrientWidth.value = enabled
+    }
+
+    fun setNutrientWidth(width: Int) {
+        prefs.edit().putInt("nutrient_width", width).apply()
+        _nutrientWidth.value = width
     }
 
     fun setSearchAutoFocusOption(option: SearchAutoFocusOption) {

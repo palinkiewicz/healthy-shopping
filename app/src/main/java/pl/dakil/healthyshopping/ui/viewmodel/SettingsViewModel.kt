@@ -22,6 +22,7 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
     val nutrientColors: StateFlow<Map<String, String>> = repository.nutrientColors
     val showTemporaryNutrient: StateFlow<Boolean> = repository.showTemporaryNutrient
     val uniformNutrientWidth: StateFlow<Boolean> = repository.uniformNutrientWidth
+    val nutrientWidth: StateFlow<Int> = repository.nutrientWidth
     val searchAutoFocusOption: StateFlow<SearchAutoFocusOption> = repository.searchAutoFocusOption
 
     val recentlyViewedLimit: StateFlow<Int> = repository.recentlyViewedLimit
@@ -56,6 +57,10 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
     fun setUniformNutrientWidth(enabled: Boolean) {
         repository.setUniformNutrientWidth(enabled)
+    }
+
+    fun setNutrientWidth(width: Int) {
+        repository.setNutrientWidth(width)
     }
 
     fun setSearchAutoFocusOption(option: SearchAutoFocusOption) {

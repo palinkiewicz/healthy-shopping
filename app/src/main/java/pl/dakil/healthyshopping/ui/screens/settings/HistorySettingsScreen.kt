@@ -46,27 +46,14 @@ fun HistorySettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Liczba wyświetlanych produktów: $recentlyViewedLimit",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = if (recentlyViewedLimit == 0) "Wyłączono wyświetlanie historii" else "Pokazuje ostatnie $recentlyViewedLimit odwiedzonych produktów",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
-                
-                Slider(
-                    value = recentlyViewedLimit.toFloat(),
-                    onValueChange = { viewModel.setRecentlyViewedLimit(it.toInt()) },
-                    valueRange = 0f..10f,
-                    steps = 9,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
+            SettingsItemSlider(
+                title = "Liczba wyświetlanych produktów: $recentlyViewedLimit",
+                description = if (recentlyViewedLimit == 0) "Wyłączono wyświetlanie historii" else "Pokazuje ostatnie $recentlyViewedLimit odwiedzonych produktów",
+                value = recentlyViewedLimit.toFloat(),
+                onValueChange = { viewModel.setRecentlyViewedLimit(it.toInt()) },
+                valueRange = 0f..10f,
+                steps = 9
+            )
             
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
 

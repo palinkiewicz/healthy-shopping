@@ -66,6 +66,7 @@ fun SearchScreen(
     val nutrientColors by settingsViewModel.nutrientColors.collectAsState()
     val showTemporaryNutrient by settingsViewModel.showTemporaryNutrient.collectAsState()
     val uniformNutrientWidth by settingsViewModel.uniformNutrientWidth.collectAsState()
+    val nutrientWidth by settingsViewModel.nutrientWidth.collectAsState()
     val searchAutoFocusOption by settingsViewModel.searchAutoFocusOption.collectAsState()
 
     var textFieldValue by remember { mutableStateOf(TextFieldValue(query)) }
@@ -186,6 +187,7 @@ fun SearchScreen(
                                         nutrientColors = nutrientColors,
                                         sort = sort,
                                         uniformNutrientWidth = uniformNutrientWidth,
+                                        nutrientWidth = nutrientWidth,
                                         onClick = { product.ean?.let { onProductClicked(it) } }
                                     )
                                 }
@@ -205,6 +207,7 @@ fun ProductCard(
     nutrientColors: Map<String, String>,
     sort: SearchSort,
     uniformNutrientWidth: Boolean,
+    nutrientWidth: Int,
     onClick: () -> Unit
 ) {
     Card(
@@ -266,7 +269,8 @@ fun ProductCard(
                     visibleNutrientIds = visibleNutrientIds,
                     nutrientColors = nutrientColors,
                     sort = sort,
-                    uniformNutrientWidth = uniformNutrientWidth
+                    uniformNutrientWidth = uniformNutrientWidth,
+                    nutrientWidth = nutrientWidth
                 )
             }
 
@@ -463,7 +467,8 @@ fun NutrientPreviewRow(
     visibleNutrientIds: Set<String>,
     nutrientColors: Map<String, String>,
     sort: SearchSort,
-    uniformNutrientWidth: Boolean
+    uniformNutrientWidth: Boolean,
+    nutrientWidth: Int
 ) {
     val nutrientsToShow = product.nutrients?.nutrients?.filter { 
         visibleNutrientIds.contains(it.id) 
@@ -493,7 +498,7 @@ fun NutrientPreviewRow(
                 style = MaterialTheme.typography.labelMedium,
                 color = color,
                 fontWeight = if (isSortedNutrient) FontWeight.Bold else FontWeight.Normal,
-                modifier = if (uniformNutrientWidth) Modifier.widthIn(min = 72.dp) else Modifier
+                modifier = if (uniformNutrientWidth) Modifier.widthIn(min = nutrientWidth.dp) else Modifier
             )
         }
     }

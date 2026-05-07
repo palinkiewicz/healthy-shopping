@@ -29,6 +29,7 @@ fun SearchSettingsScreen(
     val nutrientColors by viewModel.nutrientColors.collectAsState()
     val showTemporaryNutrient by viewModel.showTemporaryNutrient.collectAsState()
     val uniformNutrientWidth by viewModel.uniformNutrientWidth.collectAsState()
+    val nutrientWidth by viewModel.nutrientWidth.collectAsState()
     val searchAutoFocusOption by viewModel.searchAutoFocusOption.collectAsState()
     
     var showSearchFocusDialog by remember { mutableStateOf(false) }
@@ -75,6 +76,17 @@ fun SearchSettingsScreen(
                 checked = uniformNutrientWidth,
                 onCheckedChange = { viewModel.setUniformNutrientWidth(it) }
             )
+
+            if (uniformNutrientWidth) {
+                SettingsItemSlider(
+                    title = "Szerokość etykiety wartości: ${nutrientWidth}dp",
+                    description = "Ustaw minimalną szerokość dla etykiet wartości odżywczych na liście produktów",
+                    value = nutrientWidth.toFloat(),
+                    onValueChange = { viewModel.setNutrientWidth(it.toInt()) },
+                    valueRange = 32f..128f,
+                    steps = 11
+                )
+            }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
 
