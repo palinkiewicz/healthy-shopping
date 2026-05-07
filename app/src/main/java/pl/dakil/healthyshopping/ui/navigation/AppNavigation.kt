@@ -5,8 +5,11 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -130,48 +133,56 @@ fun AppNavigation(
             val fromRoute = initialState.destination.route
             val toRoute = targetState.destination.route
             if (fromRoute in bottomBarRoutes && toRoute in bottomBarRoutes) {
-                androidx.compose.animation.EnterTransition.None
+                fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing)) + 
+                scaleIn(initialScale = 0.92f, animationSpec = tween(300, easing = FastOutSlowInEasing))
             } else {
                 slideIntoContainer(
                     AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(400)
-                ) + fadeIn(animationSpec = tween(400))
+                    animationSpec = tween(400, easing = FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(400)) + 
+                scaleIn(initialScale = 0.95f, animationSpec = tween(400, easing = FastOutSlowInEasing))
             }
         },
         exitTransition = {
             val fromRoute = initialState.destination.route
             val toRoute = targetState.destination.route
             if (fromRoute in bottomBarRoutes && toRoute in bottomBarRoutes) {
-                androidx.compose.animation.ExitTransition.None
+                fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing)) + 
+                scaleOut(targetScale = 0.92f, animationSpec = tween(300, easing = FastOutSlowInEasing))
             } else {
                 slideOutOfContainer(
                     AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(400)
-                ) + fadeOut(animationSpec = tween(400))
+                    animationSpec = tween(400, easing = FastOutSlowInEasing)
+                ) + fadeOut(animationSpec = tween(400)) +
+                scaleOut(targetScale = 0.95f, animationSpec = tween(400, easing = FastOutSlowInEasing))
             }
         },
         popEnterTransition = {
             val fromRoute = initialState.destination.route
             val toRoute = targetState.destination.route
             if (fromRoute in bottomBarRoutes && toRoute in bottomBarRoutes) {
-                androidx.compose.animation.EnterTransition.None
+                fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing)) + 
+                scaleIn(initialScale = 0.92f, animationSpec = tween(300, easing = FastOutSlowInEasing))
             } else {
                 slideIntoContainer(
                     AnimatedContentTransitionScope.SlideDirection.Right,
-                    animationSpec = tween(400)
-                ) + fadeIn(animationSpec = tween(400))
+                    animationSpec = tween(400, easing = FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(400)) +
+                scaleIn(initialScale = 0.95f, animationSpec = tween(400, easing = FastOutSlowInEasing))
             }
         },
         popExitTransition = {
             val fromRoute = initialState.destination.route
             val toRoute = targetState.destination.route
             if (fromRoute in bottomBarRoutes && toRoute in bottomBarRoutes) {
-                androidx.compose.animation.ExitTransition.None
+                fadeOut(animationSpec = tween(300, easing = FastOutSlowInEasing)) + 
+                scaleOut(targetScale = 0.92f, animationSpec = tween(300, easing = FastOutSlowInEasing))
             } else {
                 slideOutOfContainer(
                     AnimatedContentTransitionScope.SlideDirection.Right,
-                    animationSpec = tween(400)
-                ) + fadeOut(animationSpec = tween(400))
+                    animationSpec = tween(400, easing = FastOutSlowInEasing)
+                ) + fadeOut(animationSpec = tween(400)) +
+                scaleOut(targetScale = 0.95f, animationSpec = tween(400, easing = FastOutSlowInEasing))
             }
         }
     ) {
