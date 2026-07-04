@@ -1,16 +1,22 @@
 package pl.dakil.healthyshopping.ui.screens
 
+import android.content.Intent
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddChart
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ImageNotSupported
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -22,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,6 +75,7 @@ fun SearchScreen(
     val uniformNutrientWidth by settingsViewModel.uniformNutrientWidth.collectAsState()
     val nutrientWidth by settingsViewModel.nutrientWidth.collectAsState()
     val searchAutoFocusOption by settingsViewModel.searchAutoFocusOption.collectAsState()
+    val comparisonEans by settingsViewModel.comparisonEans.collectAsState()
 
     var textFieldValue by remember { mutableStateOf(TextFieldValue(query)) }
 
@@ -114,10 +122,10 @@ fun SearchScreen(
                 .padding(padding)
                 .padding(bottom = bottomPadding)
         ) {
-            // Search Bar
-            OutlinedTextField(
+            // Search Bar — fully rounded and filled, like a real search bar
+            TextField(
                 value = textFieldValue,
-                onValueChange = { 
+                onValueChange = {
                     textFieldValue = it
                     if (it.text != query) {
                         viewModel.onSearchQueryChange(it.text)
@@ -129,12 +137,23 @@ fun SearchScreen(
                     .focusRequester(focusRequester),
                 placeholder = { Text("Wpisz nazwę produktu...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Szukaj") },
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                trailingIcon = if (textFieldValue.text.isNotEmpty()) {
+                    {
+                        IconButton(onClick = {
+                            textFieldValue = TextFieldValue("")
+                            viewModel.onSearchQueryChange("")
+                        }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Wyczyść")
+                        }
+                    }
+                } else null,
+                shape = CircleShape,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent
                 ),
                 singleLine = true
             )
@@ -177,18 +196,27 @@ fun SearchScreen(
                         } else {
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                                contentPadding = PaddingValues(vertical = 8.dp)
                             ) {
                                 items(state.products) { product ->
-                                    ProductCard(
+                                    ProductListItem(
                                         product = product,
                                         visibleNutrientIds = effectiveVisibleNutrients,
                                         nutrientColors = nutrientColors,
                                         sort = sort,
                                         uniformNutrientWidth = uniformNutrientWidth,
                                         nutrientWidth = nutrientWidth,
-                                        onClick = { product.ean?.let { onProductClicked(it) } }
+                                        isInComparison = product.ean != null && product.ean in comparisonEans,
+                                        onClick = { product.ean?.let { onProductClicked(it) } },
+                                        onToggleComparison = {
+                                            product.ean?.let { ean ->
+                                                if (ean in comparisonEans) {
+                                                    settingsViewModel.removeFromComparison(ean)
+                                                } else {
+                                                    settingsViewModel.addToComparison(ean)
+                                                }
+                                            }
+                                        }
                                     )
                                 }
                             }
@@ -200,70 +228,62 @@ fun SearchScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ProductCard(
+fun ProductListItem(
     product: SearchProduct,
     visibleNutrientIds: Set<String>,
     nutrientColors: Map<String, String>,
     sort: SearchSort,
     uniformNutrientWidth: Boolean,
     nutrientWidth: Int,
-    onClick: () -> Unit
+    isInComparison: Boolean,
+    onClick: () -> Unit,
+    onToggleComparison: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Image -> 1:1, handling null with icon
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                if (product.image?.url != null) {
-                    AsyncImage(
-                        model = product.image.url,
-                        contentDescription = product.name,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.ImageNotSupported,
-                        contentDescription = "Brak zdjęcia",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.size(32.dp)
-                    )
+    val context = LocalContext.current
+    var showContextMenu by remember { mutableStateOf(false) }
+
+    Box {
+        ListItem(
+            modifier = Modifier.combinedClickable(
+                onClick = onClick,
+                onLongClick = { showContextMenu = true }
+            ),
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            leadingContent = {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (product.image?.url != null) {
+                        AsyncImage(
+                            model = product.image.url,
+                            contentDescription = product.name,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.ImageNotSupported,
+                            contentDescription = "Brak zdjęcia",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            // Name
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            },
+            headlineContent = {
                 Text(
                     text = product.name ?: "Nieznany produkt",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+            },
+            supportingContent = {
                 NutrientPreviewRow(
                     product = product,
                     visibleNutrientIds = visibleNutrientIds,
@@ -272,30 +292,71 @@ fun ProductCard(
                     uniformNutrientWidth = uniformNutrientWidth,
                     nutrientWidth = nutrientWidth
                 )
+            },
+            trailingContent = {
+                val scoreColorHex = product.score?.color ?: "#CCCCCC"
+                val scoreColor = try {
+                    Color(android.graphics.Color.parseColor(scoreColorHex))
+                } catch (e: Exception) {
+                    MaterialTheme.colorScheme.primary
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(scoreColor),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = product.score?.value?.toString() ?: "?",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
             }
+        )
 
-            Spacer(modifier = Modifier.width(16.dp))
-
-            // Score Box
-            val scoreColorHex = product.score?.color ?: "#CCCCCC"
-            val scoreColor = try {
-                Color(android.graphics.Color.parseColor(scoreColorHex))
-            } catch (e: Exception) {
-                MaterialTheme.colorScheme.primary
-            }
-
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(scoreColor),
-                contentAlignment = Alignment.Center
+        // Context menu anchored to the bottom-right corner of the item.
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp)
+        ) {
+            DropdownMenu(
+                expanded = showContextMenu,
+                onDismissRequest = { showContextMenu = false }
             ) {
-                Text(
-                    text = product.score?.value?.toString() ?: "?",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium
+                DropdownMenuItem(
+                    text = { Text(if (isInComparison) "Usuń z porównywarki" else "Dodaj do porównywarki") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = if (isInComparison) Icons.Default.CheckCircle else Icons.Default.AddChart,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = {
+                        onToggleComparison()
+                        showContextMenu = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Udostępnij") },
+                    leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) },
+                    onClick = {
+                        val shareText = buildString {
+                            product.name?.let { append(it).append("\n") }
+                            append("https://zdrowezakupy.org/product/${product.ean}")
+                        }
+                        val sendIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, shareText)
+                            type = "text/plain"
+                        }
+                        context.startActivity(Intent.createChooser(sendIntent, null))
+                        showContextMenu = false
+                    }
                 )
             }
         }
@@ -451,12 +512,7 @@ fun SortChip(
                     modifier = Modifier.size(16.dp)
                 )
             }
-        } else null,
-        shape = RoundedCornerShape(20.dp),
-        colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-        )
+        } else null
     )
 }
 

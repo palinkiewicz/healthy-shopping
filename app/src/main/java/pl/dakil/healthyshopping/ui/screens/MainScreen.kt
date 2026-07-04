@@ -34,8 +34,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
+import pl.dakil.healthyshopping.R
 import pl.dakil.healthyshopping.data.model.SearchProduct
+import pl.dakil.healthyshopping.ui.components.AppIcon
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,35 +89,20 @@ fun MainScreen(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // App Icon / Logo
-                    Box(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                                shape = RoundedCornerShape(24.dp)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(50.dp)
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.height(32.dp))
+                    // App icon and name
+                    AppIcon(size = 112.dp)
+
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "Co jesz?",
+                        text = stringResource(R.string.app_name),
                         style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Text(
                         text = "Zeskanuj kod kreskowy lub wpisz go ręcznie, aby sprawdzić zdrowotność produktu.",
                         style = MaterialTheme.typography.bodyLarge,
