@@ -1,14 +1,14 @@
 <div align="center">
   <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" alt="Ikona aplikacji HealthyShopping" width="128" />
 
-  # HealthyShopping
+  # Zdrówskład
 
   <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/palinkiewicz/healthy-shopping">
     <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="60" />
   </a>
 </div>
 
-HealthyShopping to lekka aplikacja na system Android, będąca alternatywą dla oficjalnej aplikacji ZdroweZakupy. Głównym celem projektu jest dostarczenie szybkiego i przejrzystego interfejsu ułatwiającego weryfikację składu produktów spożywczych bezpośrednio podczas zakupów.
+Zdrówskład to lekka aplikacja na system Android, będąca alternatywą dla oficjalnej aplikacji ZdroweZakupy. Głównym celem projektu jest dostarczenie szybkiego i przejrzystego interfejsu ułatwiającego weryfikację składu produktów spożywczych bezpośrednio podczas zakupów.
 
 ## Główne funkcje
 
