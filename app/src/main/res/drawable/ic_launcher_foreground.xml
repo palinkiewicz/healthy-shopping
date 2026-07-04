@@ -1,15 +1,39 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24"
-    android:tint="#000000">
-  <group android:scaleX="0.435"
-      android:scaleY="0.435"
-      android:translateX="6.78"
-      android:translateY="6.78">
-    <path
-        android:fillColor="@android:color/white"
-        android:pathData="M18.06,22.99h1.66c0.84,0 1.53,-0.64 1.63,-1.46L23,5.05h-5L18,1h-1.97v4.05h-4.97l0.3,2.34c1.71,0.47 3.31,1.32 4.27,2.26 1.44,1.42 2.43,2.89 2.43,5.29v8.05zM1,21.99L1,21h15.03v0.99c0,0.55 -0.45,1 -1.01,1L2.01,22.99c-0.56,0 -1.01,-0.45 -1.01,-1zM16.03,14.99c0,-8 -15.03,-8 -15.03,0h15.03zM1.02,17h15v2h-15z"/>
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+  <group android:scaleX="0.8516129"
+      android:scaleY="0.8516129"
+      android:translateX="8.864516"
+      android:translateY="13.122581">
+    <group android:scaleX="0.95" android:scaleY="0.95" android:translateX="2.7" android:translateY="2.7">
+      <group android:scaleX="0.85" android:scaleY="0.85" android:translateX="8.1" android:translateY="8.1">
+
+        <!-- Pastelowe listki-akcenty w tle (odpowiednik pinów / słupków z innych ikon) -->
+        <path android:fillColor="#C8E6C9" android:pathData="M22,20 c6,0 8,4 8,8 c-6,0 -8,-4 -8,-8z"/>
+        <path android:fillColor="#C8E6C9" android:pathData="M86,24 c-6,0 -8,4 -8,8 c6,0 8,-4 8,-8z"/>
+        <path android:fillColor="#C8E6C9" android:pathData="M88,52 c-5,0 -7,3.5 -7,7 c5,0 7,-3.5 7,-7z"/>
+
+        <!-- Liść w koszyku -->
+        <path android:fillColor="#81C784" android:pathData="M56,8 C42,15 40,30 56,42 C72,30 70,15 56,8 Z"/>
+        <!-- Jaśniejsza połówka liścia -->
+        <path android:fillColor="#A5D6A7" android:pathData="M56,8 C42,15 40,30 56,42 L56,8 Z"/>
+        <!-- Nerw główny liścia -->
+        <path android:strokeColor="#2E7D32" android:strokeWidth="3" android:strokeLineCap="round" android:fillColor="#00000000" android:pathData="M 56,14 L 56,38"/>
+        <!-- Nerwy boczne -->
+        <path android:strokeColor="#2E7D32" android:strokeWidth="2.5" android:strokeLineCap="round" android:fillColor="#00000000" android:pathData="M 56,22 L 49,18 M 56,28 L 63,24 M 56,34 L 50,30"/>
+        <!-- Ogonek liścia schodzący do koszyka -->
+        <path android:strokeColor="#2E7D32" android:strokeWidth="3" android:strokeLineCap="round" android:fillColor="#00000000" android:pathData="M 56,42 L 56,48"/>
+
+        <!-- Koszyk zakupowy (gruby kontur w stylu pozostałych ikon) -->
+        <path android:strokeColor="#212121" android:strokeWidth="6" android:strokeLineJoin="round" android:strokeLineCap="round" android:fillColor="#00000000" android:pathData="M 20,28 L 30,28 L 39,64 L 72,64 L 80,42 L 34,42"/>
+
+        <!-- Kółka koszyka -->
+        <path android:fillColor="#212121" android:pathData="M 45,78 m -6,0 a 6,6 0 1,1 12,0 a 6,6 0 1,1 -12,0"/>
+        <path android:fillColor="#212121" android:pathData="M 67,78 m -6,0 a 6,6 0 1,1 12,0 a 6,6 0 1,1 -12,0"/>
+
+      </group>
+    </group>
   </group>
 </vector>
