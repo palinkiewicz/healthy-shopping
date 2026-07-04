@@ -4,158 +4,184 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import kotlin.math.roundToInt
+import pl.dakil.healthyshopping.data.repository.AppColorTheme
+import pl.dakil.healthyshopping.data.repository.DarkThemeOption
 import pl.dakil.healthyshopping.data.repository.SearchAutoFocusOption
-import pl.dakil.healthyshopping.data.repository.ThemePreset
-import pl.dakil.healthyshopping.ui.theme.HealthyShoppingTheme
+
+private const val DISABLED_ALPHA = 0.38f
 
 // ---------------------------------------------------------------------------
-// Shared setting item composables
+// Shared setting row composables (native ListItem look)
 // ---------------------------------------------------------------------------
 
 @Composable
-fun SettingsItemSwitch(
+fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp, end = 16.dp),
+    )
+}
+
+/**
+ * Shared base for every settings row, so switches, sliders and selects share
+ * the exact same paddings and sizing. [trailing] is sized to its own content.
+ */
+@Composable
+fun SettingRow(
     title: String,
-    subtitle: String,
+    summary: String? = null,
+    enabled: Boolean = true,
+    onClick: (() -> Unit)? = null,
+    leading: (@Composable () -> Unit)? = null,
+    supporting: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+) {
+    ListItem(
+        modifier = Modifier
+            .then(
+                if (onClick != null) Modifier.clickable(enabled = enabled, onClick = onClick) else Modifier,
+            )
+            .alpha(if (enabled) 1f else DISABLED_ALPHA),
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        headlineContent = { Text(title) },
+        supportingContent = if (summary != null || supporting != null) {
+            {
+                Column {
+                    summary?.let { Text(it) }
+                    supporting?.invoke()
+                }
+            }
+        } else null,
+        leadingContent = leading,
+        trailingContent = trailing,
+    )
+}
+
+@Composable
+fun SwitchRow(
+    title: String,
+    summary: String? = null,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Column(
-            modifier = Modifier.weight(1f).padding(end = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-            Text(text = subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-        }
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
-    }
+    SettingRow(
+        title = title,
+        summary = summary,
+        enabled = enabled,
+        onClick = { onCheckedChange(!checked) },
+        trailing = { Switch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled) },
+    )
 }
 
 @Composable
-fun SettingsItemClickable(title: String, subtitle: String, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-            Text(text = subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-        }
-    }
-}
-
-@Composable
-fun SettingsCategoryItem(
-    icon: ImageVector,
+fun SliderRow(
     title: String,
-    subtitle: String,
-    onClick: () -> Unit
+    summary: String? = null,
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    valueRange: IntRange,
+    steps: Int = valueRange.last - valueRange.first - 1,
+    valueLabel: (Int) -> String = { it.toString() },
+    enabled: Boolean = true,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
+    SettingRow(
+        title = title,
+        summary = summary,
+        enabled = enabled,
+        supporting = {
+            Slider(
+                value = value.toFloat(),
+                onValueChange = { onValueChange(it.roundToInt()) },
+                valueRange = valueRange.first.toFloat()..valueRange.last.toFloat(),
+                steps = steps,
+                enabled = enabled,
+            )
+        },
+        trailing = { Text(valueLabel(value)) },
+    )
+}
+
+@Composable
+fun <T> SelectRow(
+    title: String,
+    summary: String? = null,
+    selectedLabel: String,
+    options: List<Pair<T, String>>,
+    onSelect: (T) -> Unit,
+    enabled: Boolean = true,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    SettingRow(
+        title = title,
+        summary = summary,
+        enabled = enabled,
+        onClick = { expanded = true },
+        trailing = {
+            // Menu anchored to this trailing box so it opens on the right.
+            Box {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(selectedLabel, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(Icons.Rounded.ArrowDropDown, contentDescription = null)
+                }
+                DropdownMenu(expanded = expanded && enabled, onDismissRequest = { expanded = false }) {
+                    options.forEach { (value, label) ->
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            onClick = {
+                                onSelect(value)
+                                expanded = false
+                            },
+                        )
+                    }
+                }
+            }
+        },
+    )
+}
+
+/** A row that opens another screen, marked with a trailing chevron. */
+@Composable
+fun NavigationRow(
+    title: String,
+    summary: String? = null,
+    icon: ImageVector? = null,
+    onClick: () -> Unit,
+) {
+    SettingRow(
+        title = title,
+        summary = summary,
+        onClick = onClick,
+        leading = icon?.let { { Icon(it, contentDescription = null) } },
+        trailing = {
             Icon(
-                imageVector = icon,
+                Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(22.dp)
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-        }
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-        }
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
-        )
-    }
-}
-
-@Composable
-fun SettingsItemSlider(
-    title: String,
-    description: String,
-    value: Float,
-    onValueChange: (Float) -> Unit,
-    valueRange: ClosedFloatingPointRange<Float>,
-    steps: Int = 0,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.SemiBold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-        )
-        Slider(
-            value = value,
-            onValueChange = onValueChange,
-            valueRange = valueRange,
-            steps = steps,
-            modifier = Modifier.padding(top = 8.dp)
-        )
-    }
+        },
+    )
 }
 
 // ---------------------------------------------------------------------------
@@ -173,26 +199,21 @@ fun NutrientSettingItem(
     var showColorDialog by remember { mutableStateOf(false) }
     val color = try { Color(android.graphics.Color.parseColor(colorHex)) } catch (e: Exception) { Color.Gray }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onToggleVisible(!isVisible) }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(checked = isVisible, onCheckedChange = onToggleVisible)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(color)
-                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f), CircleShape)
-                .clickable { showColorDialog = true }
-        )
-    }
+    SettingRow(
+        title = name,
+        onClick = { onToggleVisible(!isVisible) },
+        leading = { Checkbox(checked = isVisible, onCheckedChange = onToggleVisible) },
+        trailing = {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(color)
+                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f), CircleShape)
+                    .clickable { showColorDialog = true }
+            )
+        },
+    )
 
     if (showColorDialog) {
         val presetColors = listOf(
@@ -204,8 +225,8 @@ fun NutrientSettingItem(
 
         Dialog(onDismissRequest = { showColorDialog = false }) {
             Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surfaceContainer,
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 modifier = Modifier.padding(16.dp)
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
@@ -254,80 +275,23 @@ fun NutrientSettingItem(
 }
 
 // ---------------------------------------------------------------------------
-// Theme preview row
-// ---------------------------------------------------------------------------
-
-@Composable
-fun ThemePreviewRow(
-    preset: ThemePreset,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .border(2.dp, borderColor, RoundedCornerShape(12.dp))
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onClick() }
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = getPresetDisplayName(preset),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            modifier = Modifier.weight(1f)
-        )
-
-        HealthyShoppingTheme(themePreset = preset) {
-            Box(
-                modifier = Modifier
-                    .size(width = 60.dp, height = 40.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.background)
-                    .border(1.dp, Color.Gray.copy(alpha = 0.3f), RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    modifier = Modifier.padding(4.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.6f)
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(MaterialTheme.colorScheme.primary)
-                    )
-                }
-            }
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
 // Display name helpers
 // ---------------------------------------------------------------------------
 
-fun getPresetDisplayName(preset: ThemePreset): String = when (preset) {
-    ThemePreset.SYSTEM  -> "Systemowy"
-    ThemePreset.DYNAMIC -> "Dynamic Color (Android 12+)"
-    ThemePreset.LIGHT   -> "Jasny"
-    ThemePreset.DARK    -> "Ciemny"
-    ThemePreset.OLED    -> "OLED (Czysta Czerń)"
-    ThemePreset.SEPIA   -> "Sepia (Ochrona Wzroku)"
-    ThemePreset.FOREST  -> "Forest (Zieleń)"
+fun getColorThemeDisplayName(theme: AppColorTheme): String = when (theme) {
+    AppColorTheme.ZDROWSKLAD -> "Zdrówskład"
+    AppColorTheme.DYNAMIC -> "Kolory systemu"
+    AppColorTheme.OCEAN -> "Ocean"
+    AppColorTheme.LAVENDER -> "Lawenda"
+    AppColorTheme.SUNSET -> "Zachód słońca"
+    AppColorTheme.ROSE -> "Róża"
+    AppColorTheme.TEAL -> "Morski"
+}
+
+fun getDarkThemeOptionDisplayName(option: DarkThemeOption): String = when (option) {
+    DarkThemeOption.FOLLOW_SYSTEM -> "Systemowy"
+    DarkThemeOption.LIGHT -> "Jasny"
+    DarkThemeOption.DARK -> "Ciemny"
 }
 
 fun getAutoFocusOptionDisplayName(option: SearchAutoFocusOption): String = when (option) {

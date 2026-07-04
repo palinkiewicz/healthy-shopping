@@ -49,7 +49,6 @@ import pl.dakil.healthyshopping.ui.screens.MainScreen
 import pl.dakil.healthyshopping.ui.screens.SearchScreen
 import pl.dakil.healthyshopping.ui.screens.SettingsScreen
 import pl.dakil.healthyshopping.ui.screens.ComparisonScreen
-import pl.dakil.healthyshopping.ui.screens.settings.AboutSettingsScreen
 import pl.dakil.healthyshopping.ui.screens.settings.AppearanceSettingsScreen
 import pl.dakil.healthyshopping.ui.screens.settings.HistorySettingsScreen
 import pl.dakil.healthyshopping.ui.screens.settings.ProductDetailsSettingsScreen
@@ -80,13 +79,6 @@ fun AppNavigation(
     val currentRoute = navBackStackEntry?.destination?.route
 
     val bottomBarRoutes = listOf("main", "search", "comparison", "settings_route")
-    val settingsSubRoutes = listOf(
-        "settings_appearance",
-        "settings_search",
-        "settings_details",
-        "settings_history",
-        "settings_about"
-    )
     val showBottomBar = currentRoute in bottomBarRoutes
 
     Scaffold(
@@ -170,37 +162,35 @@ fun AppNavigation(
                 onNavigateSearch = { navController.navigate("settings_search") },
                 onNavigateProductDetails = { navController.navigate("settings_details") },
                 onNavigateHistory = { navController.navigate("settings_history") },
-                onNavigateAbout = { navController.navigate("settings_about") },
                 bottomPadding = paddingValues.calculateBottomPadding()
             )
         }
         composable("settings_appearance") {
             AppearanceSettingsScreen(
                 viewModel = settingsViewModel,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                bottomPadding = paddingValues.calculateBottomPadding()
             )
         }
         composable("settings_search") {
             SearchSettingsScreen(
                 viewModel = settingsViewModel,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                bottomPadding = paddingValues.calculateBottomPadding()
             )
         }
         composable("settings_details") {
             ProductDetailsSettingsScreen(
                 viewModel = settingsViewModel,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                bottomPadding = paddingValues.calculateBottomPadding()
             )
         }
         composable("settings_history") {
             HistorySettingsScreen(
                 viewModel = settingsViewModel,
-                onBackClick = { navController.popBackStack() }
-            )
-        }
-        composable("settings_about") {
-            AboutSettingsScreen(
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                bottomPadding = paddingValues.calculateBottomPadding()
             )
         }
         composable("comparison") {

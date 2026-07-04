@@ -1,21 +1,40 @@
 package pl.dakil.healthyshopping.ui.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Brush
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ShoppingBag
-import androidx.compose.material3.*
+import androidx.compose.material.icons.outlined.Brush
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.ShoppingBag
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import pl.dakil.healthyshopping.ui.screens.settings.SettingsCategoryItem
+import pl.dakil.healthyshopping.ui.components.flatTopAppBarColors
+import pl.dakil.healthyshopping.ui.screens.settings.AboutAppDialog
+import pl.dakil.healthyshopping.ui.screens.settings.SettingRow
+import pl.dakil.healthyshopping.ui.screens.settings.NavigationRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,17 +43,15 @@ fun SettingsScreen(
     onNavigateSearch: () -> Unit,
     onNavigateProductDetails: () -> Unit,
     onNavigateHistory: () -> Unit,
-    onNavigateAbout: () -> Unit,
     bottomPadding: Dp = 0.dp
 ) {
+    var showAboutDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Ustawienia") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                colors = flatTopAppBarColors()
             )
         },
         containerColor = MaterialTheme.colorScheme.background,
@@ -44,67 +61,48 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(bottom = bottomPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
-
-            SettingsCategoryItem(
-                icon = Icons.Default.Brush,
+            NavigationRow(
                 title = "Wygląd",
-                subtitle = "Motyw aplikacji",
+                summary = "Motyw i kolory aplikacji",
+                icon = Icons.Outlined.Brush,
                 onClick = onNavigateAppearance
             )
 
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
-            )
-
-            SettingsCategoryItem(
-                icon = Icons.Default.Search,
+            NavigationRow(
                 title = "Wyszukiwarka",
-                subtitle = "Skupienie, sortowanie, podgląd składników",
+                summary = "Skupienie, sortowanie, podgląd składników",
+                icon = Icons.Outlined.Search,
                 onClick = onNavigateSearch
             )
 
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
-            )
-
-            SettingsCategoryItem(
-                icon = Icons.Default.ShoppingBag,
+            NavigationRow(
                 title = "Szczegóły produktu",
-                subtitle = "Sekcje, składniki, wskazówki GDA",
+                summary = "Sekcje, składniki, wskazówki GDA",
+                icon = Icons.Outlined.ShoppingBag,
                 onClick = onNavigateProductDetails
             )
 
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
-            )
-
-            SettingsCategoryItem(
-                icon = Icons.Default.History,
+            NavigationRow(
                 title = "Historia",
-                subtitle = "Liczba produktów, czyszczenie",
+                summary = "Liczba produktów, czyszczenie",
+                icon = Icons.Outlined.History,
                 onClick = onNavigateHistory
             )
 
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f)
-            )
-
-            SettingsCategoryItem(
-                icon = Icons.Default.Info,
+            SettingRow(
                 title = "O aplikacji",
-                subtitle = "Wersja, autorzy, repozytorium",
-                onClick = onNavigateAbout
+                summary = "Wersja, autorzy, repozytorium",
+                leading = { Icon(Icons.Outlined.Info, contentDescription = null) },
+                onClick = { showAboutDialog = true }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(bottomPadding))
         }
+    }
+
+    if (showAboutDialog) {
+        AboutAppDialog(onDismiss = { showAboutDialog = false })
     }
 }

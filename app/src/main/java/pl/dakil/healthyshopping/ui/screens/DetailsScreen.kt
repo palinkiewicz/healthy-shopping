@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.platform.ClipEntry
 import coil.compose.AsyncImage
+import pl.dakil.healthyshopping.ui.components.flatTopAppBarColors
 import pl.dakil.healthyshopping.data.model.Ingredient
 import pl.dakil.healthyshopping.data.model.IngredientResponse
 import pl.dakil.healthyshopping.data.model.Nutrient
@@ -101,8 +102,7 @@ fun DetailsScreen(
                     IconButton(onClick = onBackClicked) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Wróć",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            contentDescription = "Wróć"
                         )
                     }
                 },
@@ -115,7 +115,7 @@ fun DetailsScreen(
                             Icon(
                                 imageVector = if (isProductInComparison) Icons.Default.CheckCircle else Icons.Default.AddChart,
                                 contentDescription = if (isProductInComparison) "Usuń z porównania" else "Dodaj do porównania",
-                                tint = if (isProductInComparison) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
+                                tint = if (isProductInComparison) MaterialTheme.colorScheme.primary else LocalContentColor.current
                             )
                         }
 
@@ -132,17 +132,13 @@ fun DetailsScreen(
                             }) {
                                 Icon(
                                     imageVector = Icons.Default.Share,
-                                    contentDescription = "Udostępnij",
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    contentDescription = "Udostępnij"
                                 )
                             }
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                colors = flatTopAppBarColors()
             )
         },
         containerColor = MaterialTheme.colorScheme.background,

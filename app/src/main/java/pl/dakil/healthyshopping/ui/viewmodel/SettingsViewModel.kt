@@ -2,13 +2,16 @@ package pl.dakil.healthyshopping.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.StateFlow
+import pl.dakil.healthyshopping.data.repository.AppColorTheme
+import pl.dakil.healthyshopping.data.repository.DarkThemeOption
 import pl.dakil.healthyshopping.data.repository.SettingsRepository
-import pl.dakil.healthyshopping.data.repository.ThemePreset
 import pl.dakil.healthyshopping.data.repository.SearchAutoFocusOption
 import pl.dakil.healthyshopping.data.model.SearchProduct
 
 class SettingsViewModel(private val repository: SettingsRepository) : ViewModel() {
-    val themePreset: StateFlow<ThemePreset> = repository.themePreset
+    val colorTheme: StateFlow<AppColorTheme> = repository.colorTheme
+    val darkThemeOption: StateFlow<DarkThemeOption> = repository.darkThemeOption
+    val pureBlack: StateFlow<Boolean> = repository.pureBlack
 
     val showGroupedIngredients: StateFlow<Boolean> = repository.showGroupedIngredients
 
@@ -31,8 +34,16 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
     val detailsSectionOrder: StateFlow<List<String>> = repository.detailsSectionOrder
     val hiddenDetailsSections: StateFlow<Set<String>> = repository.hiddenDetailsSections
 
-    fun setThemePreset(preset: ThemePreset) {
-        repository.setThemePreset(preset)
+    fun setColorTheme(theme: AppColorTheme) {
+        repository.setColorTheme(theme)
+    }
+
+    fun setDarkThemeOption(option: DarkThemeOption) {
+        repository.setDarkThemeOption(option)
+    }
+
+    fun setPureBlack(enabled: Boolean) {
+        repository.setPureBlack(enabled)
     }
 
     fun setShowGroupedIngredients(enabled: Boolean) {

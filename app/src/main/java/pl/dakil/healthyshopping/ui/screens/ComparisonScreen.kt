@@ -49,16 +49,12 @@ fun ComparisonScreen(
                         IconButton(onClick = { viewModel.clearComparison() }) {
                             Icon(
                                 imageVector = Icons.Default.DeleteSweep,
-                                contentDescription = "Wyczyść wszystko",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                contentDescription = "Wyczyść wszystko"
                             )
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                colors = pl.dakil.healthyshopping.ui.components.flatTopAppBarColors()
             )
         },
         containerColor = MaterialTheme.colorScheme.background,

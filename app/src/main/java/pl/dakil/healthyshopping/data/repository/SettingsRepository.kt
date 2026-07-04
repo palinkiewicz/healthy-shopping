@@ -27,8 +27,12 @@ val AVAILABLE_NUTRIENTS = listOf(
     NutrientSetting("salt", "Sól", "#F44336")
 )
 
-enum class ThemePreset {
-    SYSTEM, DYNAMIC, LIGHT, DARK, OLED, SEPIA, FOREST
+enum class AppColorTheme {
+    ZDROWSKLAD, DYNAMIC, OCEAN, LAVENDER, SUNSET, ROSE, TEAL
+}
+
+enum class DarkThemeOption {
+    FOLLOW_SYSTEM, LIGHT, DARK
 }
 
 enum class DetailsSection(val id: String, val label: String) {
@@ -47,10 +51,51 @@ class SettingsRepository(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("settings_prefs", Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true }
 
-    private val _themePreset = MutableStateFlow(
-        ThemePreset.valueOf(prefs.getString("theme_preset", ThemePreset.SYSTEM.name) ?: ThemePreset.SYSTEM.name)
+    init {
+        migrateOldThemePreset()
+    }
+
+    private val _colorTheme = MutableStateFlow(
+        runCatching {
+            AppColorTheme.valueOf(prefs.getString("color_theme", AppColorTheme.ZDROWSKLAD.name)!!)
+        }.getOrDefault(AppColorTheme.ZDROWSKLAD)
     )
-    val themePreset: StateFlow<ThemePreset> = _themePreset.asStateFlow()
+    val colorTheme: StateFlow<AppColorTheme> = _colorTheme.asStateFlow()
+
+    private val _darkThemeOption = MutableStateFlow(
+        runCatching {
+            DarkThemeOption.valueOf(prefs.getString("dark_theme_option", DarkThemeOption.FOLLOW_SYSTEM.name)!!)
+        }.getOrDefault(DarkThemeOption.FOLLOW_SYSTEM)
+    )
+    val darkThemeOption: StateFlow<DarkThemeOption> = _darkThemeOption.asStateFlow()
+
+    private val _pureBlack = MutableStateFlow(
+        prefs.getBoolean("pure_black", false)
+    )
+    val pureBlack: StateFlow<Boolean> = _pureBlack.asStateFlow()
+
+    // Converts the pre-rehaul single "theme_preset" preference into the new
+    // color theme + dark mode + pure black trio.
+    private fun migrateOldThemePreset() {
+        val old = prefs.getString("theme_preset", null) ?: return
+        if (!prefs.contains("color_theme")) {
+            val (color, dark, black) = when (old) {
+                "DYNAMIC" -> Triple(AppColorTheme.DYNAMIC, DarkThemeOption.FOLLOW_SYSTEM, false)
+                "LIGHT" -> Triple(AppColorTheme.ZDROWSKLAD, DarkThemeOption.LIGHT, false)
+                "DARK" -> Triple(AppColorTheme.ZDROWSKLAD, DarkThemeOption.DARK, false)
+                "OLED" -> Triple(AppColorTheme.ZDROWSKLAD, DarkThemeOption.DARK, true)
+                "SEPIA" -> Triple(AppColorTheme.SUNSET, DarkThemeOption.LIGHT, false)
+                "FOREST" -> Triple(AppColorTheme.ZDROWSKLAD, DarkThemeOption.DARK, false)
+                else -> Triple(AppColorTheme.ZDROWSKLAD, DarkThemeOption.FOLLOW_SYSTEM, false)
+            }
+            prefs.edit()
+                .putString("color_theme", color.name)
+                .putString("dark_theme_option", dark.name)
+                .putBoolean("pure_black", black)
+                .apply()
+        }
+        prefs.edit().remove("theme_preset").apply()
+    }
 
     private val _showGroupedIngredients = MutableStateFlow(
         prefs.getBoolean("show_grouped_ingredients", false)
@@ -127,9 +172,19 @@ class SettingsRepository(context: Context) {
     )
     val searchAutoFocusOption: StateFlow<SearchAutoFocusOption> = _searchAutoFocusOption.asStateFlow()
 
-    fun setThemePreset(preset: ThemePreset) {
-        prefs.edit().putString("theme_preset", preset.name).apply()
-        _themePreset.value = preset
+    fun setColorTheme(theme: AppColorTheme) {
+        prefs.edit().putString("color_theme", theme.name).apply()
+        _colorTheme.value = theme
+    }
+
+    fun setDarkThemeOption(option: DarkThemeOption) {
+        prefs.edit().putString("dark_theme_option", option.name).apply()
+        _darkThemeOption.value = option
+    }
+
+    fun setPureBlack(enabled: Boolean) {
+        prefs.edit().putBoolean("pure_black", enabled).apply()
+        _pureBlack.value = enabled
     }
 
     fun setShowGroupedIngredients(enabled: Boolean) {

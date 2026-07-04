@@ -1,30 +1,64 @@
 package pl.dakil.healthyshopping.ui.screens.settings
 
 import android.os.Build
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import pl.dakil.healthyshopping.data.repository.ThemePreset
+import pl.dakil.healthyshopping.data.repository.AppColorTheme
+import pl.dakil.healthyshopping.data.repository.DarkThemeOption
+import pl.dakil.healthyshopping.ui.components.flatTopAppBarColors
+import pl.dakil.healthyshopping.ui.theme.colorSchemeFor
 import pl.dakil.healthyshopping.ui.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppearanceSettingsScreen(
     viewModel: SettingsViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    bottomPadding: Dp = 0.dp
 ) {
-    val themePreset by viewModel.themePreset.collectAsState()
-    var showThemeDialog by remember { mutableStateOf(false) }
+    val colorTheme by viewModel.colorTheme.collectAsState()
+    val darkThemeOption by viewModel.darkThemeOption.collectAsState()
+    val pureBlack by viewModel.pureBlack.collectAsState()
 
     Scaffold(
         topBar = {
@@ -32,13 +66,10 @@ fun AppearanceSettingsScreen(
                 title = { Text("Wygląd") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wstecz")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Wstecz")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                colors = flatTopAppBarColors()
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -49,63 +80,118 @@ fun AppearanceSettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            SettingsItemClickable(
-                title = "Motyw aplikacji",
-                subtitle = getPresetDisplayName(themePreset),
-                onClick = { showThemeDialog = true }
-            )
-        }
-    }
+            SectionHeader("Kolory motywu")
 
-    if (showThemeDialog) {
-        Dialog(onDismissRequest = { showThemeDialog = false }) {
-            Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surfaceContainer,
+            val availableThemes = AppColorTheme.entries.filter {
+                it != AppColorTheme.DYNAMIC || Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+            }
+
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(availableThemes.size) { index ->
+                    val theme = availableThemes[index]
+                    ThemeColorSwatch(
+                        theme = theme,
+                        isSelected = theme == colorTheme,
+                        onClick = { viewModel.setColorTheme(theme) }
+                    )
+                }
+            }
+
+            SectionHeader("Tryb ciemny")
+
+            SingleChoiceSegmentedButtonRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp)
-                ) {
-                    Text(
-                        text = "Wybierz motyw",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    for (preset in ThemePreset.entries) {
-                        val isDynamicOnOldAndroid = preset == ThemePreset.DYNAMIC && Build.VERSION.SDK_INT < Build.VERSION_CODES.S
-                        
-                        if (!isDynamicOnOldAndroid) {
-                            key(preset) {
-                                ThemePreviewRow(
-                                    preset = preset,
-                                    isSelected = preset == themePreset,
-                                    onClick = {
-                                        viewModel.setThemePreset(preset)
-                                        showThemeDialog = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    TextButton(
-                        onClick = { showThemeDialog = false },
-                        modifier = Modifier.align(Alignment.End)
+                DarkThemeOption.entries.forEachIndexed { index, option ->
+                    SegmentedButton(
+                        selected = option == darkThemeOption,
+                        onClick = { viewModel.setDarkThemeOption(option) },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = DarkThemeOption.entries.size
+                        )
                     ) {
-                        Text("Anuluj")
+                        Text(getDarkThemeOptionDisplayName(option))
                     }
                 }
             }
+
+            SwitchRow(
+                title = "Czysta czerń",
+                summary = "Całkowicie czarne tło w trybie ciemnym, oszczędza baterię na ekranach OLED",
+                checked = pureBlack,
+                onCheckedChange = { viewModel.setPureBlack(it) },
+                enabled = darkThemeOption != DarkThemeOption.LIGHT
+            )
+
+            Spacer(modifier = Modifier.height(bottomPadding))
         }
+    }
+}
+
+/**
+ * A circular color swatch in the style of Android 16's built-in theme
+ * selector: top half shows the theme's primary color, the bottom quadrants
+ * its secondary and tertiary containers. The selected swatch gets a ring
+ * and a check mark.
+ */
+@Composable
+private fun ThemeColorSwatch(
+    theme: AppColorTheme,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val isDark = isSystemInDarkTheme()
+    val scheme = colorSchemeFor(colorTheme = theme, darkTheme = isDark)
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(76.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .then(
+                    if (isSelected) Modifier.border(
+                        width = 3.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = CircleShape
+                    ) else Modifier
+                )
+                .padding(if (isSelected) 6.dp else 0.dp)
+                .clip(CircleShape)
+                .clickable { onClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawArc(scheme.primary, startAngle = 180f, sweepAngle = 180f, useCenter = true)
+                drawArc(scheme.secondaryContainer, startAngle = 90f, sweepAngle = 90f, useCenter = true)
+                drawArc(scheme.tertiaryContainer, startAngle = 0f, sweepAngle = 90f, useCenter = true)
+            }
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Rounded.Check,
+                    contentDescription = null,
+                    tint = scheme.onPrimary,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 8.dp)
+                        .size(20.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = getColorThemeDisplayName(theme),
+            style = MaterialTheme.typography.labelMedium,
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            maxLines = 2
+        )
     }
 }

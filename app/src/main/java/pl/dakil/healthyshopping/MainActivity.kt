@@ -66,10 +66,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val themePreset by settingsViewModel.themePreset.collectAsState()
+            val colorTheme by settingsViewModel.colorTheme.collectAsState()
+            val darkThemeOption by settingsViewModel.darkThemeOption.collectAsState()
+            val pureBlack by settingsViewModel.pureBlack.collectAsState()
 
             HealthyShoppingTheme(
-                themePreset = themePreset
+                colorTheme = colorTheme,
+                darkThemeOption = darkThemeOption,
+                pureBlack = pureBlack
             ) {
                 AppNavigation(
                     viewModel = viewModel,

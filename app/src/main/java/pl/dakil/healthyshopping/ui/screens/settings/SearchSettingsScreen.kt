@@ -1,29 +1,38 @@
 package pl.dakil.healthyshopping.ui.screens.settings
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import pl.dakil.healthyshopping.data.repository.AVAILABLE_NUTRIENTS
 import pl.dakil.healthyshopping.data.repository.SearchAutoFocusOption
+import pl.dakil.healthyshopping.ui.components.flatTopAppBarColors
 import pl.dakil.healthyshopping.ui.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchSettingsScreen(
     viewModel: SettingsViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    bottomPadding: Dp = 0.dp
 ) {
     val visibleNutrients by viewModel.visibleNutrients.collectAsState()
     val nutrientColors by viewModel.nutrientColors.collectAsState()
@@ -31,8 +40,6 @@ fun SearchSettingsScreen(
     val uniformNutrientWidth by viewModel.uniformNutrientWidth.collectAsState()
     val nutrientWidth by viewModel.nutrientWidth.collectAsState()
     val searchAutoFocusOption by viewModel.searchAutoFocusOption.collectAsState()
-    
-    var showSearchFocusDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -40,13 +47,10 @@ fun SearchSettingsScreen(
                 title = { Text("Wyszukiwarka") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wstecz")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Wstecz")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                colors = flatTopAppBarColors()
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -57,51 +61,48 @@ fun SearchSettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            SettingsItemClickable(
-                title = "Automatyczne skupienie na szukaniu",
-                subtitle = getAutoFocusOptionDisplayName(searchAutoFocusOption),
-                onClick = { showSearchFocusDialog = true }
+            SectionHeader("Ogólne")
+
+            SelectRow(
+                title = "Automatyczne skupienie",
+                summary = "Kiedy pole wyszukiwania ma być aktywowane automatycznie",
+                selectedLabel = getAutoFocusOptionDisplayName(searchAutoFocusOption),
+                options = SearchAutoFocusOption.entries.map { it to getAutoFocusOptionDisplayName(it) },
+                onSelect = { viewModel.setSearchAutoFocusOption(it) }
             )
 
-            SettingsItemSwitch(
+            SwitchRow(
                 title = "Pokaż sortowaną wartość",
-                subtitle = "Jeśli sortujesz według wartości odżwyczej, która nie jest wybrany z listy, zostanie ona tymczasowo dodana do widoku",
+                summary = "Jeśli sortujesz według wartości odżywczej, która nie jest wybrana z listy, zostanie ona tymczasowo dodana do widoku",
                 checked = showTemporaryNutrient,
                 onCheckedChange = { viewModel.setShowTemporaryNutrient(it) }
             )
 
-            SettingsItemSwitch(
+            SwitchRow(
                 title = "Wyrównaj podgląd wartości",
-                subtitle = "Każda etykieta będzie miała minimalną szerokość, co ułatwi porównywanie wartości na pierwszy rzut oka",
+                summary = "Każda etykieta będzie miała minimalną szerokość, co ułatwi porównywanie wartości na pierwszy rzut oka",
                 checked = uniformNutrientWidth,
                 onCheckedChange = { viewModel.setUniformNutrientWidth(it) }
             )
 
             if (uniformNutrientWidth) {
-                SettingsItemSlider(
-                    title = "Szerokość etykiety wartości: ${nutrientWidth}dp",
-                    description = "Ustaw minimalną szerokość dla etykiet wartości odżywczych na liście produktów",
-                    value = nutrientWidth.toFloat(),
-                    onValueChange = { viewModel.setNutrientWidth(it.toInt()) },
-                    valueRange = 32f..128f,
-                    steps = 11
+                SliderRow(
+                    title = "Szerokość etykiety wartości",
+                    summary = "Minimalna szerokość etykiet wartości odżywczych na liście produktów",
+                    value = nutrientWidth,
+                    onValueChange = { viewModel.setNutrientWidth(it) },
+                    valueRange = 32..128,
+                    steps = 11,
+                    valueLabel = { "${it}dp" }
                 )
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+            SectionHeader("Lista wartości na podglądzie")
 
-            Text(
-                text = "Lista wartości na podglądzie",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
-            )
-            
             Text(
                 text = "Wybierz wartości odżywcze, które chcesz widzieć bezpośrednio na liście produktów",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
 
@@ -114,71 +115,8 @@ fun SearchSettingsScreen(
                     onColorChange = { viewModel.setNutrientColor(nutrient.id, it) }
                 )
             }
-        }
-    }
 
-    if (showSearchFocusDialog) {
-        Dialog(onDismissRequest = { showSearchFocusDialog = false }) {
-            Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surfaceContainer,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp)
-                ) {
-                    Text(
-                        text = "Automatyczne skupienie",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    SearchAutoFocusOption.entries.forEach { option ->
-                        key(option) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .clickable {
-                                        viewModel.setSearchAutoFocusOption(option)
-                                        showSearchFocusDialog = false
-                                    }
-                                    .padding(vertical = 12.dp, horizontal = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = option == searchAutoFocusOption,
-                                    onClick = {
-                                        viewModel.setSearchAutoFocusOption(option)
-                                        showSearchFocusDialog = false
-                                    }
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = getAutoFocusOptionDisplayName(option),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    TextButton(
-                        onClick = { showSearchFocusDialog = false },
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Text("Anuluj")
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.height(bottomPadding))
         }
     }
 }

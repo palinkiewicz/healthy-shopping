@@ -1,24 +1,39 @@
 package pl.dakil.healthyshopping.ui.screens.settings
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import pl.dakil.healthyshopping.ui.components.flatTopAppBarColors
 import pl.dakil.healthyshopping.ui.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistorySettingsScreen(
     viewModel: SettingsViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    bottomPadding: Dp = 0.dp
 ) {
     val recentlyViewedLimit by viewModel.recentlyViewedLimit.collectAsState()
     val context = LocalContext.current
@@ -29,13 +44,10 @@ fun HistorySettingsScreen(
                 title = { Text("Historia przeglądania") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wstecz")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Wstecz")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                colors = flatTopAppBarColors()
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -46,27 +58,32 @@ fun HistorySettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            SettingsItemSlider(
-                title = "Liczba wyświetlanych produktów: $recentlyViewedLimit",
-                description = if (recentlyViewedLimit == 0) "Wyłączono wyświetlanie historii" else "Pokazuje ostatnie $recentlyViewedLimit odwiedzonych produktów",
-                value = recentlyViewedLimit.toFloat(),
-                onValueChange = { viewModel.setRecentlyViewedLimit(it.toInt()) },
-                valueRange = 0f..10f,
+            SliderRow(
+                title = "Liczba wyświetlanych produktów",
+                summary = if (recentlyViewedLimit == 0) "Wyłączono wyświetlanie historii" else "Pokazuje ostatnie $recentlyViewedLimit odwiedzonych produktów",
+                value = recentlyViewedLimit,
+                onValueChange = { viewModel.setRecentlyViewedLimit(it) },
+                valueRange = 0..10,
                 steps = 9
             )
-            
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
 
-            TextButton(
-                onClick = { 
+            SettingRow(
+                title = "Wyczyść historię",
+                summary = "Usuń wszystkie ostatnio przeglądane produkty",
+                leading = {
+                    Icon(
+                        Icons.Outlined.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                },
+                onClick = {
                     viewModel.clearRecentlyViewed()
                     Toast.makeText(context, "Historia została wyczyszczona", Toast.LENGTH_SHORT).show()
-                },
-                modifier = Modifier.padding(start = 8.dp),
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-            ) {
-                Text("Wyczyść historię")
-            }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(bottomPadding))
         }
     }
 }
