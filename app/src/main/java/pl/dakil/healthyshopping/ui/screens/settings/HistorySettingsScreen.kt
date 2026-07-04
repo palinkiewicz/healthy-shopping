@@ -10,7 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -72,7 +72,7 @@ fun HistorySettingsScreen(
                 summary = "Usuń wszystkie ostatnio przeglądane produkty",
                 leading = {
                     Icon(
-                        Icons.Outlined.Delete,
+                        Icons.Rounded.Delete,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.error
                     )

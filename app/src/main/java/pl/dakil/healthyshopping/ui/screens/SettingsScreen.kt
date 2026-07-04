@@ -12,11 +12,11 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Brush
-import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.ShoppingBag
+import androidx.compose.material.icons.rounded.Brush
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.ShoppingBag
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -66,35 +66,35 @@ fun SettingsScreen(
             NavigationRow(
                 title = "Wygląd",
                 summary = "Motyw i kolory aplikacji",
-                icon = Icons.Outlined.Brush,
+                icon = Icons.Rounded.Brush,
                 onClick = onNavigateAppearance
             )
 
             NavigationRow(
                 title = "Wyszukiwarka",
                 summary = "Skupienie, sortowanie, podgląd składników",
-                icon = Icons.Outlined.Search,
+                icon = Icons.Rounded.Search,
                 onClick = onNavigateSearch
             )
 
             NavigationRow(
                 title = "Szczegóły produktu",
                 summary = "Sekcje, składniki, wskazówki GDA",
-                icon = Icons.Outlined.ShoppingBag,
+                icon = Icons.Rounded.ShoppingBag,
                 onClick = onNavigateProductDetails
             )
 
             NavigationRow(
                 title = "Historia",
                 summary = "Liczba produktów, czyszczenie",
-                icon = Icons.Outlined.History,
+                icon = Icons.Rounded.History,
                 onClick = onNavigateHistory
             )
 
             SettingRow(
                 title = "O aplikacji",
                 summary = "Wersja, autorzy, repozytorium",
-                leading = { Icon(Icons.Outlined.Info, contentDescription = null) },
+                leading = { Icon(Icons.Rounded.Info, contentDescription = null) },
                 onClick = { showAboutDialog = true }
             )
 
