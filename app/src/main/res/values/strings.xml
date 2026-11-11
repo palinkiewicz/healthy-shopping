@@ -284,8 +284,8 @@
     <string name="about_summary">Wersja, autorzy, repozytorium</string>
     <string name="about_description">Lekki, niezależny klient serwisu Zdrowe Zakupy. Skanuj kody, wyszukuj produkty i porównuj ich skład.</string>
     <string name="about_repository">Repozytorium GitHub</string>
-    <string name="about_author">Autor: %1$s</string>
-    <string name="about_idea">Pomysł: %1$s</string>
+    <string name="about_author">Autor</string>
+    <string name="about_idea">Pomysłodawca</string>
 
     <!-- Settings -->
     <string name="settings_appearance">Wygląd</string>

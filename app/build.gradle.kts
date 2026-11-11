@@ -7,14 +7,13 @@ plugins {
 android {
     namespace = "pl.dakil.healthyshopping"
     compileSdk {
-        // 37 is required by the Compose BOM; targetSdk (runtime behaviour) stays at 36.
         version = release(37)
     }
 
     defaultConfig {
         applicationId = "pl.dakil.healthyshopping"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 6
         versionName = "2.0.0"
 

@@ -16,8 +16,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -197,21 +199,39 @@ private fun AboutSheet(onDismiss: () -> Unit) {
             url = REPOSITORY_URL,
             modifier = Modifier.fillMaxWidth(),
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-            LinkButton(
-                label = stringResource(R.string.about_author, AUTHOR_NAME),
+        // People get full-width rows: half-width buttons cut their names off.
+        Column(verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
+            PersonRow(
+                name = AUTHOR_NAME,
+                role = stringResource(R.string.about_author),
                 symbol = AppSymbols.Person,
                 url = AUTHOR_URL,
-                modifier = Modifier.weight(1f),
+                index = 0,
             )
-            LinkButton(
-                label = stringResource(R.string.about_idea, CO_CREATOR_NAME),
+            PersonRow(
+                name = CO_CREATOR_NAME,
+                role = stringResource(R.string.about_idea),
                 symbol = AppSymbols.Lightbulb,
                 url = CO_CREATOR_URL,
-                modifier = Modifier.weight(1f),
+                index = 1,
             )
         }
     }
+}
+
+@Composable
+private fun PersonRow(name: String, role: String, symbol: AppSymbol, url: String, index: Int) {
+    val uriHandler = LocalUriHandler.current
+    SegmentedListItem(
+        onClick = { runCatching { uriHandler.openUri(url) } },
+        shapes = ListItemDefaults.segmentedShapes(index, 2),
+        colors = ListItemDefaults.segmentedColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        leadingContent = { ShapedIcon(symbol) },
+        supportingContent = { Text(role) },
+        trailingContent = {
+            AppIcon(AppSymbols.OpenInNew, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        },
+    ) { Text(name) }
 }
 
 @Composable
