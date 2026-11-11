@@ -1,3 +1,392 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Zdrówskład</string>
+    <string name="app_tagline">Sprawdzaj skład produktów spożywczych, zanim trafią do koszyka</string>
+    <string name="version_x">Wersja %1$s</string>
+
+    <!-- Common actions -->
+    <string name="action_back">Wstecz</string>
+    <string name="action_cancel">Anuluj</string>
+    <string name="action_clear">Wyczyść</string>
+    <string name="action_close">Zamknij</string>
+    <string name="action_retry">Spróbuj ponownie</string>
+    <string name="action_share">Udostępnij</string>
+    <string name="copied">Skopiowano do schowka</string>
+    <string name="value_missing">Brak danych</string>
+    <string name="value_missing_short">–</string>
+    <string name="product_unknown">Nieznany produkt</string>
+    <string name="ingredient_unknown">Nieznany składnik</string>
+
+    <!-- Bottom navigation -->
+    <string name="tab_home">Główna</string>
+    <string name="tab_search">Szukaj</string>
+    <string name="tab_comparison">Porównanie</string>
+    <string name="tab_more">Więcej</string>
+
+    <!-- Home -->
+    <string name="home_meal_breakfast">Pora na śniadanie</string>
+    <string name="home_meal_breakfast_sub">Zacznij dzień od dobrego składu</string>
+    <string name="home_meal_brunch">Czas na drugie śniadanie</string>
+    <string name="home_meal_brunch_sub">Mała przekąska? Sprawdź, co w niej jest</string>
+    <string name="home_meal_lunch">Pora na obiad</string>
+    <string name="home_meal_lunch_sub">Co dziś wyląduje na talerzu?</string>
+    <string name="home_meal_snack">Może podwieczorek?</string>
+    <string name="home_meal_snack_sub">Owoce czy coś słodkiego? Zerknij na skład</string>
+    <string name="home_meal_dinner">Pora na kolację</string>
+    <string name="home_meal_dinner_sub">Lekko i smacznie na koniec dnia</string>
+    <string name="home_meal_night">Nocna przekąska?</string>
+    <string name="home_meal_night_sub">Sprawdź skład, zanim zajrzysz do lodówki</string>
+    <string name="home_scan">Skanuj kod kreskowy</string>
+    <string name="home_or">lub</string>
+    <string name="home_ean_placeholder">Wpisz kod EAN</string>
+    <string name="home_check">Sprawdź produkt</string>
+    <string name="home_recent">Ostatnio przeglądane</string>
+    <string name="home_recent_empty">Tu pojawią się ostatnio sprawdzone produkty</string>
+    <string name="home_fact_title">Ciekawostka</string>
+    <string name="home_fact_next">Dotknij, by zobaczyć kolejną</string>
+    <string-array name="home_facts">
+        <item>Składniki są wymienione od tego, którego jest w produkcie najwięcej. Zerknij na pierwsze trzy.</item>
+        <item>Cukier ukrywa się pod wieloma nazwami: syrop glukozowo-fruktozowy, dekstroza, maltodekstryna czy melasa.</item>
+        <item>Porównuj produkty w przeliczeniu na 100 g, a nie na porcję. Porcje producentów bywają bardzo małe.</item>
+        <item>Krótki skład zwykle oznacza mniej przetworzony produkt.</item>
+        <item>WHO zaleca dorosłym mniej niż 5 g soli dziennie, czyli mniej więcej płaską łyżeczkę.</item>
+        <item>Napis „light” oznacza co najmniej 30% mniej np. tłuszczu lub kalorii niż w zwykłej wersji produktu. Nie musi znaczyć „zdrowo”.</item>
+        <item>Ciemny kolor pieczywa nie gwarantuje pełnego ziarna. Może pochodzić od karmelu lub słodu jęczmiennego.</item>
+        <item>Produkt może nosić oznaczenie „źródło błonnika”, jeśli ma co najmniej 3 g błonnika na 100 g.</item>
+        <item>„Wysoka zawartość błonnika” to co najmniej 6 g błonnika na 100 g produktu.</item>
+        <item>„Wysoka zawartość białka” oznacza, że białko dostarcza co najmniej 20% energii produktu.</item>
+        <item>Częściowo utwardzone tłuszcze roślinne mogą zawierać izomery trans, które podnoszą poziom „złego” cholesterolu LDL.</item>
+        <item>W UE tłuszcze trans pochodzenia przemysłowego nie mogą przekraczać 2 g na 100 g tłuszczu w produkcie.</item>
+        <item>„Bez dodatku cukru” nie znaczy „bez cukru”. Produkt wciąż może zawierać cukry naturalnie obecne, np. z owoców lub mleka.</item>
+        <item>Laktoza to cukier mleczny. Dlatego naturalne mleko ma w tabeli „cukry”, choć nikt go nie dosładzał.</item>
+        <item>Zakupy po posiłku to mniej przekąsek w koszyku. Na głodnego łatwiej o impulsywne wybory.</item>
+        <item>Lista zakupów pomaga ominąć alejki, w których czekają pokusy.</item>
+        <item>Litera „E” przy dodatku oznacza, że został on oceniony i dopuszczony do stosowania w Unii Europejskiej.</item>
+        <item>E300 to kwas askorbinowy, czyli po prostu witamina C.</item>
+        <item>E330 to kwas cytrynowy, który naturalnie występuje w owocach cytrusowych.</item>
+        <item>E160a to beta-karoten, ten sam barwnik, który nadaje kolor marchewce.</item>
+        <item>E322 to lecytyna, emulgator pozyskiwany najczęściej z soi lub słonecznika.</item>
+        <item>E621 to glutaminian monosodowy, wzmacniacz smaku odpowiedzialny za smak umami.</item>
+        <item>E440 to pektyny, substancje żelujące otrzymywane m.in. z jabłek i skórek cytrusów.</item>
+        <item>E407 to karagen, zagęstnik pozyskiwany z czerwonych wodorostów.</item>
+        <item>E150 to karmel, jeden z najczęściej stosowanych barwników spożywczych na świecie.</item>
+        <item>E250, czyli azotyn sodu, chroni wędliny przed groźnymi bakteriami i nadaje im różowy kolor.</item>
+        <item>E951 to aspartam, słodzik około 200 razy słodszy od cukru.</item>
+        <item>Glikozydy stewiolowe (E960) ze stewii są 200–300 razy słodsze od cukru.</item>
+        <item>Erytrytol (E968) prawie nie dostarcza kalorii i nie podnosi poziomu cukru we krwi.</item>
+        <item>Ksylitol (E967) jest bardzo groźny dla psów. Nie częstuj ich słodyczami z ksylitolem.</item>
+        <item>Poliole, takie jak sorbitol, w nadmiarze działają przeczyszczająco. Dlatego produkty z ich dużą ilością mają ostrzeżenie na etykiecie.</item>
+        <item>1 g tłuszczu dostarcza około 9 kcal, a 1 g białka lub węglowodanów około 4 kcal.</item>
+        <item>1 g alkoholu to około 7 kcal, prawie tyle co tłuszcz.</item>
+        <item>Błonnik dostarcza około 2 kcal na gram, połowę tego co cukier.</item>
+        <item>1 kcal to około 4,2 kJ. Dlatego na etykiecie liczba kilodżuli jest ponad cztery razy większa.</item>
+        <item>Procenty na etykietach liczy się względem referencyjnego spożycia 2000 kcal dla przeciętnej dorosłej osoby.</item>
+        <item>Referencyjne dzienne spożycie to 90 g cukrów, 70 g tłuszczu i 20 g kwasów nasyconych.</item>
+        <item>Referencyjne dzienne spożycie białka to 50 g, a węglowodanów 260 g.</item>
+        <item>Sól na etykiecie to zawartość sodu pomnożona przez 2,5.</item>
+        <item>Data „należy spożyć do” dotyczy bezpieczeństwa. Po jej upływie produktu nie powinno się jeść.</item>
+        <item>Data „najlepiej spożyć przed” mówi o jakości. Po niej produkt często wciąż nadaje się do jedzenia.</item>
+        <item>Alergeny w składzie muszą być wyróżnione, np. pogrubieniem lub inną czcionką.</item>
+        <item>W UE jest 14 głównych alergenów, które trzeba wyróżniać na etykiecie, m.in. gluten, mleko, jaja i orzechy.</item>
+        <item>„Może zawierać…” ostrzega przed śladami alergenu, np. z tej samej linii produkcyjnej.</item>
+        <item>Jeśli składnik jest w nazwie produktu, np. truskawki w jogurcie truskawkowym, jego ilość musi być podana w procentach.</item>
+        <item>Napój „o smaku pomarańczowym” wcale nie musi zawierać soku z pomarańczy.</item>
+        <item>Do soków owocowych w UE nie wolno dodawać cukru. Do nektarów i napojów już tak.</item>
+        <item>Nektar owocowy zawiera zwykle od 25 do 50% soku, zależnie od owocu.</item>
+        <item>Puszka słodzonego napoju gazowanego może zawierać około 35 g cukru, czyli prawie 9 łyżeczek.</item>
+        <item>Płaska łyżeczka cukru to około 4–5 g.</item>
+        <item>WHO zaleca, by cukry dodane dostarczały mniej niż 10% energii z diety, a najlepiej mniej niż 5%.</item>
+        <item>Miód to wciąż cukier. Składa się głównie z fruktozy i glukozy.</item>
+        <item>Cukier trzcinowy ma praktycznie tyle samo kalorii co biały.</item>
+        <item>Płatki owsiane błyskawiczne szybciej podnoszą poziom cukru we krwi niż płatki górskie.</item>
+        <item>Ciecierzyca, soczewica i fasola to świetne roślinne źródła białka i błonnika.</item>
+        <item>Orzechy są kaloryczne, ale garść dziennie to dobre źródło zdrowych tłuszczów.</item>
+        <item>Oliwa extra virgin jest otrzymywana wyłącznie mechanicznie, bez rafinacji.</item>
+        <item>Olej rzepakowy ma korzystny stosunek kwasów omega-6 do omega-3.</item>
+        <item>Siemię lniane to jedno z najbogatszych roślinnych źródeł kwasów omega-3.</item>
+        <item>Tłuste ryby morskie, np. łosoś, makrela czy śledź, dostarczają kwasów omega-3 EPA i DHA.</item>
+        <item>Kefir i jogurty naturalne zawierają żywe kultury bakterii.</item>
+        <item>Kiszonki są naturalnym źródłem bakterii kwasu mlekowego, ale też sporej ilości soli.</item>
+        <item>Ogórki kiszone i konserwowe to nie to samo. Konserwowe zalewa się octem.</item>
+        <item>Jogurty owocowe potrafią mieć kilkanaście gramów cukru w kubeczku. Naturalny z owocami to prostszy wybór.</item>
+        <item>Wędliny mogą zawierać sporo wody, skrobi i białek roślinnych. Procent mięsa znajdziesz w składzie.</item>
+        <item>Mięso oddzielane mechanicznie to masa pozyskiwana z kości. Musi być wymienione w składzie.</item>
+        <item>Ser żółty jest bogaty w wapń, ale też w sól i tłuszcze nasycone.</item>
+        <item>Produkty „seropodobne” powstają z tłuszczu roślinnego zamiast mlecznego.</item>
+        <item>Masło musi zawierać co najmniej 80% tłuszczu mlecznego.</item>
+        <item>„Miks tłuszczowy” to połączenie masła z tłuszczem roślinnym. Nie można go nazywać masłem.</item>
+        <item>Skrobia modyfikowana to nie GMO. To skrobia zmieniona tak, by lepiej zagęszczała.</item>
+        <item>Syrop glukozowo-fruktozowy powstaje zwykle ze skrobi kukurydzianej lub pszennej.</item>
+        <item>Maltodekstryna ma wyższy indeks glikemiczny niż zwykły cukier.</item>
+        <item>Indeks glikemiczny mówi, jak szybko produkt podnosi poziom cukru we krwi.</item>
+        <item>Białe pieczywo ma wyższy indeks glikemiczny niż pełnoziarniste.</item>
+        <item>Ugotowane i wystudzone ziemniaki, ryż czy makaron zawierają więcej skrobi opornej, która działa podobnie jak błonnik.</item>
+        <item>Im dojrzalszy banan, tym jest słodszy, bo jego skrobia zamienia się w cukry.</item>
+        <item>Awokado to owoc bogaty w jednonienasycone kwasy tłuszczowe.</item>
+        <item>Z gotowanych pomidorów organizm przyswaja więcej likopenu niż z surowych.</item>
+        <item>Witamina C jest wrażliwa na temperaturę. Długie gotowanie warzyw obniża jej zawartość.</item>
+        <item>Mrożone warzywa i owoce często mają podobną wartość odżywczą jak świeże.</item>
+        <item>Czerwona papryka ma ponad dwa razy więcej witaminy C niż cytryna.</item>
+        <item>Natka pietruszki to jedno z najbogatszych w witaminę C warzyw.</item>
+        <item>Szpinak zawiera żelazo, ale organizm przyswaja je słabiej niż żelazo z mięsa.</item>
+        <item>Witamina C poprawia wchłanianie żelaza z produktów roślinnych.</item>
+        <item>Pestki dyni są dobrym źródłem magnezu i cynku.</item>
+        <item>Gorzka czekolada z dużą zawartością kakao ma zwykle znacznie mniej cukru niż mleczna.</item>
+        <item>Napoje z dużą ilością kofeiny muszą mieć ostrzeżenie, że nie są zalecane dzieciom ani kobietom w ciąży.</item>
+        <item>Woda smakowa może zawierać tyle cukru co lemoniada. Sprawdzaj etykietę.</item>
+        <item>Hasła „fit” i „wellness” to marketing. Liczy się skład.</item>
+        <item>Batony proteinowe potrafią mieć tyle cukru co zwykłe słodycze.</item>
+        <item>Musli i granola często są mocno dosładzane. Szukaj tych bez dodatku cukru.</item>
+        <item>Słodzone płatki śniadaniowe mogą zawierać ponad 25 g cukru na 100 g.</item>
+        <item>Ketchup zawiera zwykle sporo dodanego cukru, często około 20 g na 100 g.</item>
+        <item>Gotowe sosy i dressingi to częste źródło ukrytej soli i cukru.</item>
+        <item>Dużo soli mają nie tylko chipsy, ale też pieczywo, sery i wędliny.</item>
+        <item>Pieczywo to jedno z głównych źródeł soli w diecie, bo jemy go dużo każdego dnia.</item>
+        <item>Herbata zielona i czarna pochodzą z tej samej rośliny. Różnią się sposobem obróbki liści.</item>
+        <item>Czarna kawa ma niemal zero kalorii. Kalorie przynoszą mleko, syropy i cukier.</item>
+        <item>Napoje roślinne nie zawsze są wzbogacane w wapń. Sprawdź etykietę.</item>
+        <item>W UE nazwa „mleko” jest zastrzeżona dla mleka zwierzęcego. Dlatego mówi się „napój owsiany”.</item>
+        <item>Żywność ekologiczna nosi unijny znak: zielony listek z gwiazdek.</item>
+        <item>Kod kreskowy zaczynający się od 590 oznacza, że numer nadała polska organizacja GS1. Nie zawsze znaczy to, że produkt powstał w Polsce.</item>
+        <item>Ostatnia cyfra kodu EAN-13 to cyfra kontrolna. Pozwala skanerowi wykryć błędny odczyt.</item>
+        <item>Woda stanowi około 60% masy ciała dorosłego człowieka.</item>
+        <item>Pragnienie bywa mylone z głodem. Szklanka wody przed przekąską pomaga to sprawdzić.</item>
+        <item>Sygnał sytości dociera do mózgu z opóźnieniem. Jedzenie w pośpiechu sprzyja przejadaniu się.</item>
+        <item>Za ostrość papryczek odpowiada kapsaicyna. Mleko łagodzi pieczenie lepiej niż woda.</item>
+        <item>Cebula wyciska łzy przez związki siarki, które uwalniają się podczas krojenia.</item>
+        <item>Ryż brązowy to ryż z zachowaną warstwą otrąb. Ma więcej błonnika niż biały.</item>
+        <item>Kasza gryczana jest naturalnie bezglutenowa.</item>
+        <item>Owies sam w sobie nie zawiera glutenu, ale często jest nim zanieczyszczony podczas uprawy i przetwarzania.</item>
+        <item>Jedno jajko dostarcza około 6 g pełnowartościowego białka.</item>
+        <item>Kolor żółtka zależy głównie od paszy, a nie od wartości odżywczej jajka.</item>
+        <item>Pierwsza cyfra kodu na jajku oznacza sposób chowu: 0 to chów ekologiczny, a 3 klatkowy.</item>
+        <item>Mleko UHT ogrzewa się przez kilka sekund do około 135°C, dzięki czemu może długo stać poza lodówką.</item>
+        <item>Pasteryzacja to ogrzewanie poniżej 100°C, które niszczy większość drobnoustrojów, a mniej zmienia smak.</item>
+        <item>Fruktoza z całych owoców trafia do organizmu razem z błonnikiem, więc działa inaczej niż cukier w napojach.</item>
+        <item>Smoothie syci słabiej niż cały owoc, bo miksowanie i picie zmieniają to, jak szybko go zjadamy.</item>
+        <item>Pieczywo „wieloziarniste” może być zrobione z białej mąki z dodatkiem ziaren. Pełnoziarniste ma w składzie mąkę pełnoziarnistą.</item>
+        <item>Chleb na zakwasie powstaje dzięki naturalnym bakteriom i drożdżom, a nie drożdżom piekarskim.</item>
+        <item>„Naturalny aromat” musi pochodzić z surowca naturalnego, ale niekoniecznie z owocu z nazwy produktu.</item>
+    </string-array>
+
+    <!-- Search -->
+    <string name="search_placeholder">Wpisz nazwę produktu…</string>
+    <string name="search_start_title">Zacznij szukać!</string>
+    <string name="search_start_body">Wpisz nazwę produktu, by zobaczyć jego wynik zdrowotny i wartości odżywcze</string>
+    <string name="search_keep_typing">Wpisz jeszcze trochę…</string>
+    <string name="search_keep_typing_body">Szukamy od trzech znaków</string>
+    <string name="search_no_results">Brak wyników</string>
+    <string name="search_no_results_body">Spróbuj innej nazwy lub zeskanuj kod kreskowy</string>
+    <string name="search_sort_score">Wynik</string>
+
+    <!-- Comparison -->
+    <string name="comparison_title">Porównanie</string>
+    <plurals name="comparison_count">
+        <item quantity="one">%d produkt</item>
+        <item quantity="few">%d produkty</item>
+        <item quantity="many">%d produktów</item>
+        <item quantity="other">%d produktu</item>
+    </plurals>
+    <string name="comparison_add">Dodaj do porównania</string>
+    <string name="comparison_remove">Usuń z porównania</string>
+    <string name="comparison_added">Dodano do porównania</string>
+    <string name="comparison_removed">Usunięto z porównania</string>
+    <string name="comparison_clear">Wyczyść porównanie</string>
+    <string name="comparison_clear_title">Wyczyścić porównanie?</string>
+    <string name="comparison_clear_body">Wszystkie produkty zostaną usunięte z porównywarki</string>
+    <string name="comparison_empty_title">Porównywarka jest pusta</string>
+    <string name="comparison_empty_body">Zestaw produkty obok siebie i zobacz, który wypada najlepiej</string>
+    <string name="comparison_step_1">Wyszukaj lub zeskanuj produkt</string>
+    <string name="comparison_step_2">Przytrzymaj go na liście albo dotknij ikony porównania na jego stronie</string>
+    <string name="comparison_step_3">Wróć tutaj, by porównać wartości i składniki</string>
+    <string name="comparison_section_ingredients">Składniki według szkodliwości</string>
+    <string name="comparison_row_score">Wynik</string>
+    <string name="comparison_row_description">Opis</string>
+    <string name="comparison_none">brak</string>
+
+    <!-- Product details -->
+    <string name="details_title">Analiza produktu</string>
+    <string name="details_unverified_default">Produkt dodany automatycznie</string>
+    <string name="details_ean">EAN %1$s</string>
+    <string name="details_score_of">%1$d / %2$d pkt</string>
+    <string name="details_no_description">Brak szczegółowego opisu składu</string>
+    <string name="details_gda_note">Paski pokazują procent dziennego zapotrzebowania dorosłego (2000 kcal) w 100 g produktu</string>
+    <string name="nutrition_per_100">Wartości odżywcze na 100%1$s</string>
+    <string name="section_score">Wynik zdrowotny</string>
+    <string name="section_tags">Tagi produktu</string>
+    <string name="section_nutrition">Tabela wartości odżywczych</string>
+    <string name="section_ingredients">Pełna lista składników</string>
+    <string name="section_harmful">Szkodliwość składników</string>
+    <string name="ingredient_description">Opis</string>
+    <string name="ingredient_influence">Wpływ na zdrowie</string>
+
+    <!-- Harm levels -->
+    <string name="harm_group_5">Bardzo szkodliwe</string>
+    <string name="harm_group_4">Szkodliwe</string>
+    <string name="harm_group_3">Podejrzane</string>
+    <string name="harm_group_2">Neutralne</string>
+    <string name="harm_group_1">Korzystne</string>
+    <string name="harm_group_unknown">Brak danych</string>
+    <string name="harm_desc_5">Bardzo szkodliwy składnik</string>
+    <string name="harm_desc_4">Szkodliwy składnik</string>
+    <string name="harm_desc_3">Podejrzany składnik</string>
+    <string name="harm_desc_2">Neutralny wpływ na zdrowie</string>
+    <string name="harm_desc_1">Korzystny wpływ na zdrowie</string>
+    <string name="harm_desc_unknown">Brak danych o szkodliwości</string>
+
+    <!-- Tags -->
+    <string name="tag_no_sugar_added">Brak dodanego cukru</string>
+    <string name="tag_high_fiber">Wysoka zawartość błonnika</string>
+    <string name="tag_high_protein">Wysoka zawartość białka</string>
+    <string name="tag_overweight">Szkodliwe dla osób z nadwagą</string>
+    <string name="tag_cholesterol">Szkodliwe dla osób z wysokim cholesterolem</string>
+    <string name="tag_diabetes">Szkodliwe dla cukrzyków</string>
+    <string name="tag_hypertension">Szkodliwe dla osób z nadciśnieniem</string>
+
+    <!-- Nutrients -->
+    <string name="nutrient_energy">Kalorie</string>
+    <string name="nutrient_fat">Tłuszcz</string>
+    <string name="nutrient_saturated">Kwasy nasycone</string>
+    <string name="nutrient_saturated_short">Kw. nasycone</string>
+    <string name="nutrient_carbs">Węglowodany</string>
+    <string name="nutrient_sugars">Cukry</string>
+    <string name="nutrient_fiber">Błonnik</string>
+    <string name="nutrient_protein">Białko</string>
+    <string name="nutrient_salt">Sól</string>
+    <string name="nutrient_unknown">Składnik odżywczy</string>
+    <string name="copy_energy">Kalorie: %1$s</string>
+    <string name="copy_fat">Tłuszcz: %1$s</string>
+    <string name="copy_saturated">w tym kwasy nasycone: %1$s</string>
+    <string name="copy_carbs">Węglowodany: %1$s</string>
+    <string name="copy_sugars">w tym cukry: %1$s</string>
+    <string name="copy_fiber">Błonnik: %1$s</string>
+    <string name="copy_protein">Białko: %1$s</string>
+    <string name="copy_salt">Sól: %1$s</string>
+
+    <!-- Scanner -->
+    <string name="scanner_hint">Skieruj aparat na kod kreskowy</string>
+    <string name="scanner_torch_on">Włącz latarkę</string>
+    <string name="scanner_torch_off">Wyłącz latarkę</string>
+
+    <!-- Errors -->
+    <string name="error_connection_title">Brak połączenia</string>
+    <string name="error_connection_body">Sprawdź połączenie z internetem i spróbuj ponownie</string>
+    <string name="error_not_found_title">Nie znaleziono</string>
+    <string name="error_not_found_body">Tego produktu nie ma jeszcze w bazie</string>
+    <string name="error_unknown_title">Wystąpił błąd</string>
+    <string name="error_unknown_body">Coś poszło nie tak. Spróbuj ponownie za chwilę</string>
+
+    <!-- More -->
+    <string name="more_section_personalize">Personalizacja</string>
+    <string name="more_section_features">Funkcje</string>
+    <string name="more_section_about">O aplikacji</string>
+    <string name="about_title">O aplikacji</string>
+    <string name="about_summary">Wersja, autorzy, repozytorium</string>
+    <string name="about_description">Lekki, niezależny klient serwisu Zdrowe Zakupy. Skanuj kody, wyszukuj produkty i porównuj ich skład.</string>
+    <string name="about_repository">Repozytorium GitHub</string>
+    <string name="about_author">Autor: %1$s</string>
+    <string name="about_idea">Pomysł: %1$s</string>
+
+    <!-- Settings -->
+    <string name="settings_appearance">Wygląd</string>
+    <string name="settings_appearance_summary">Kolory, tryb ciemny i wrażenia</string>
+    <string name="settings_search">Wyszukiwarka</string>
+    <string name="settings_search_summary">Skupienie, sortowanie, podgląd składników</string>
+    <string name="settings_details">Szczegóły produktu</string>
+    <string name="settings_details_summary">Sekcje, składniki, wskazówki GDA</string>
+    <string name="settings_history">Historia przeglądania</string>
+    <string name="settings_history_summary">Liczba produktów, czyszczenie</string>
+
+    <string name="settings_theme_colors">Kolory motywu</string>
+    <string name="settings_dark_mode">Tryb ciemny</string>
+    <string name="settings_pure_black">Czysta czerń</string>
+    <string name="settings_pure_black_description">Całkowicie czarne tło w trybie ciemnym, oszczędza baterię na ekranach OLED</string>
+    <string name="settings_feel">Wrażenia</string>
+    <string name="settings_haptics">Reakcje haptyczne</string>
+    <string name="settings_haptics_description">Delikatne wibracje przy przełączaniu, przeciąganiu i potwierdzaniu</string>
+    <string name="settings_animated_numbers">Animowane liczby</string>
+    <string name="settings_animated_numbers_description">Zmieniające się cyfry przewijają się jak w liczniku</string>
+    <string name="settings_decorative_animations">Animacje ozdobne</string>
+    <string name="settings_decorative_animations_description">Obroty, przemiany kształtów i wsuwające się karty. Przejścia między ekranami zostają</string>
+    <string name="settings_progress_style">Paski postępu</string>
+    <string name="settings_progress_style_description">Jak rysowane są paski postępu</string>
+    <string name="settings_progress_style_wavy">Faliste</string>
+    <string name="settings_progress_style_straight">Proste</string>
+
+    <string name="theme_zdrowsklad">Zdrówskład</string>
+    <string name="theme_dynamic">Kolory systemu</string>
+    <string name="theme_ocean">Ocean</string>
+    <string name="theme_lavender">Lawenda</string>
+    <string name="theme_sunset">Zachód słońca</string>
+    <string name="theme_rose">Róża</string>
+    <string name="theme_teal">Morski</string>
+    <string name="dark_mode_system">Systemowy</string>
+    <string name="dark_mode_light">Jasny</string>
+    <string name="dark_mode_dark">Ciemny</string>
+
+    <string name="settings_section_general">Ogólne</string>
+    <string name="settings_auto_focus">Automatyczne skupienie</string>
+    <string name="settings_auto_focus_description">Kiedy pole wyszukiwania ma być aktywowane automatycznie</string>
+    <string name="auto_focus_never">Nigdy</string>
+    <string name="auto_focus_empty">Gdy pole jest puste</string>
+    <string name="auto_focus_always">Zawsze</string>
+    <string name="settings_temporary_nutrient">Pokaż sortowaną wartość</string>
+    <string name="settings_temporary_nutrient_description">Jeśli sortujesz według wartości odżywczej, która nie jest wybrana z listy, zostanie ona tymczasowo dodana do widoku</string>
+    <string name="settings_uniform_width">Wyrównaj podgląd wartości</string>
+    <string name="settings_uniform_width_description">Każda etykieta będzie miała minimalną szerokość, co ułatwi porównywanie wartości na pierwszy rzut oka</string>
+    <string name="settings_nutrient_width">Szerokość etykiety wartości</string>
+    <string name="settings_nutrient_width_description">Minimalna szerokość etykiet wartości odżywczych na liście produktów</string>
+    <string name="settings_preview_nutrients">Lista wartości na podglądzie</string>
+    <string name="settings_preview_nutrients_description">Wybierz wartości odżywcze, które chcesz widzieć bezpośrednio na liście produktów</string>
+    <string name="settings_nutrient_color_hint">Dotknij koloru, by go zmienić</string>
+    <string name="settings_color_for">Kolor: %1$s</string>
+
+    <string name="settings_section_display">Wyświetlanie</string>
+    <string name="settings_grouped">Grupuj szkodliwe składniki</string>
+    <string name="settings_grouped_description">Szkodliwe składniki zostaną pogrupowane według szkodliwości</string>
+    <string name="settings_gda">Wskazówki GDA</string>
+    <string name="settings_gda_description">Wyświetlaj procent dziennego zapotrzebowania przy tabeli wartości odżywczych na 100g</string>
+    <string name="settings_highlight">Podświetl kluczowe składniki</string>
+    <string name="settings_highlight_description">Wyróżnij wybrane składniki w pełnym opisie produktu</string>
+    <string name="settings_tags">Wyświetlaj tagi produktu</string>
+    <string name="settings_tags_description">Pokazuj specjalne etykiety, np. „Wysoka zawartość białka”</string>
+    <string name="settings_section_order">Kolejność i widoczność sekcji</string>
+    <string name="settings_section_order_description">Przytrzymaj uchwyt i przeciągnij, by zmienić kolejność. Przełącznik ukrywa sekcję.</string>
+
+    <string name="settings_section_home">Ekran główny</string>
+    <string name="settings_section_data">Dane</string>
+    <string name="settings_history_limit">Liczba wyświetlanych produktów</string>
+    <string name="settings_history_limit_off">Wyłączono wyświetlanie historii</string>
+    <plurals name="settings_history_limit_on">
+        <item quantity="one">Pokazuje ostatni odwiedzony produkt</item>
+        <item quantity="few">Pokazuje ostatnie %d odwiedzone produkty</item>
+        <item quantity="many">Pokazuje ostatnie %d odwiedzonych produktów</item>
+        <item quantity="other">Pokazuje ostatnie %d odwiedzonego produktu</item>
+    </plurals>
+    <string name="settings_history_clear">Wyczyść historię</string>
+    <string name="settings_history_empty">Historia jest pusta</string>
+    <plurals name="settings_history_count">
+        <item quantity="one">%d produkt w historii</item>
+        <item quantity="few">%d produkty w historii</item>
+        <item quantity="many">%d produktów w historii</item>
+        <item quantity="other">%d produktu w historii</item>
+    </plurals>
+    <string name="history_clear_title">Wyczyścić historię?</string>
+    <string name="history_clear_body">Ostatnio przeglądane produkty znikną z ekranu głównego</string>
+    <string name="history_cleared">Historia została wyczyszczona</string>
+
+    <!-- Accessibility -->
+    <string name="cd_score">Wynik zdrowotny: %1$s</string>
+    <string name="cd_product_photo">Zdjęcie produktu</string>
+    <string name="cd_copy_nutrition">Kopiuj wartości odżywcze</string>
+    <string name="cd_copy_ingredients">Kopiuj skład</string>
+    <string name="cd_in_comparison">W porównaniu</string>
+    <string name="cd_more_options">Więcej opcji</string>
+    <string name="cd_sort_ascending">Rosnąco</string>
+    <string name="cd_sort_descending">Malejąco</string>
+    <string name="cd_reorder">Zmień kolejność</string>
+    <string name="cd_move_up">Przesuń w górę</string>
+    <string name="cd_move_down">Przesuń w dół</string>
+    <string name="cd_pick_color">Wybierz kolor: %1$s</string>
+    <string name="cd_best_value">Najlepsza wartość</string>
 </resources>

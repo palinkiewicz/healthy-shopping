@@ -1,70 +1,105 @@
 package pl.dakil.healthyshopping.ui.screens
 
 import android.content.Intent
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddChart
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.ImageNotSupported
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import pl.dakil.healthyshopping.R
 import pl.dakil.healthyshopping.data.model.SearchProduct
+import pl.dakil.healthyshopping.data.repository.AVAILABLE_NUTRIENTS
+import pl.dakil.healthyshopping.data.repository.SearchAutoFocusOption
+import pl.dakil.healthyshopping.ui.components.ErrorState
+import pl.dakil.healthyshopping.ui.components.ProductImage
+import pl.dakil.healthyshopping.ui.components.ScoreBadge
+import pl.dakil.healthyshopping.ui.components.nutrientNameRes
+import pl.dakil.healthyshopping.ui.designsystem.AppMenu
+import pl.dakil.healthyshopping.ui.designsystem.AppMenuGroup
+import pl.dakil.healthyshopping.ui.designsystem.AppMenuItem
+import pl.dakil.healthyshopping.ui.designsystem.EmptyState
+import pl.dakil.healthyshopping.ui.designsystem.bottomBarPadding
+import pl.dakil.healthyshopping.ui.designsystem.icon.AppIcon
+import pl.dakil.healthyshopping.ui.designsystem.icon.AppSymbols
+import pl.dakil.healthyshopping.ui.designsystem.rememberHaptics
+import pl.dakil.healthyshopping.ui.designsystem.segmentedItemColors
+import pl.dakil.healthyshopping.ui.theme.Spacing
+import pl.dakil.healthyshopping.ui.theme.parseHexColor
+import pl.dakil.healthyshopping.ui.theme.tabular
+import pl.dakil.healthyshopping.ui.viewmodel.SearchSort
 import pl.dakil.healthyshopping.ui.viewmodel.SearchUiState
 import pl.dakil.healthyshopping.ui.viewmodel.SearchViewModel
 import pl.dakil.healthyshopping.ui.viewmodel.SettingsViewModel
-import pl.dakil.healthyshopping.ui.viewmodel.SearchSort
-import pl.dakil.healthyshopping.ui.viewmodel.SortType
 import pl.dakil.healthyshopping.ui.viewmodel.SortOrder
-import pl.dakil.healthyshopping.data.repository.AVAILABLE_NUTRIENTS
-import androidx.compose.material.icons.filled.Sort
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.TextFieldValue
-import pl.dakil.healthyshopping.data.repository.SearchAutoFocusOption
+import pl.dakil.healthyshopping.ui.viewmodel.SortType
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** How the user wants nutrient values previewed on each result row. */
+private data class NutrientPreview(
+    val visibleIds: Set<String>,
+    val colors: Map<String, String>,
+    val uniformWidth: Boolean,
+    val width: Int,
+)
+
 @Composable
 fun SearchScreen(
     viewModel: SearchViewModel,
     settingsViewModel: SettingsViewModel,
-    bottomPadding: Dp = 0.dp,
-    onProductClicked: (String) -> Unit
+    onProductClicked: (String) -> Unit,
 ) {
     val query by viewModel.searchQuery.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
@@ -74,151 +109,143 @@ fun SearchScreen(
     val showTemporaryNutrient by settingsViewModel.showTemporaryNutrient.collectAsState()
     val uniformNutrientWidth by settingsViewModel.uniformNutrientWidth.collectAsState()
     val nutrientWidth by settingsViewModel.nutrientWidth.collectAsState()
-    val searchAutoFocusOption by settingsViewModel.searchAutoFocusOption.collectAsState()
+    val autoFocus by settingsViewModel.searchAutoFocusOption.collectAsState()
     val comparisonEans by settingsViewModel.comparisonEans.collectAsState()
+    val haptics = rememberHaptics()
+    val focusManager = LocalFocusManager.current
 
-    var textFieldValue by remember { mutableStateOf(TextFieldValue(query)) }
-
+    var fieldValue by remember { mutableStateOf(TextFieldValue(query)) }
     LaunchedEffect(query) {
-        if (textFieldValue.text != query) {
-            textFieldValue = textFieldValue.copy(text = query)
-        }
+        if (fieldValue.text != query) fieldValue = fieldValue.copy(text = query)
     }
 
     val focusRequester = remember { FocusRequester() }
-
     LaunchedEffect(Unit) {
-        val shouldFocus = when (searchAutoFocusOption) {
+        val shouldFocus = when (autoFocus) {
             SearchAutoFocusOption.ALWAYS -> true
             SearchAutoFocusOption.EMPTY_FIELD -> query.isEmpty()
             SearchAutoFocusOption.NEVER -> false
         }
         if (shouldFocus) {
             focusRequester.requestFocus()
-            if (searchAutoFocusOption == SearchAutoFocusOption.ALWAYS) {
-                textFieldValue = textFieldValue.copy(
-                    selection = TextRange(textFieldValue.text.length)
-                )
+            if (autoFocus == SearchAutoFocusOption.ALWAYS) {
+                fieldValue = fieldValue.copy(selection = TextRange(fieldValue.text.length))
             }
         }
     }
 
-    val effectiveVisibleNutrients = remember(visibleNutrients, sort, showTemporaryNutrient) {
-        val nutrientId = sort.nutrientId
-        if (showTemporaryNutrient && sort.type == SortType.NUTRIENT && nutrientId != null) {
-            visibleNutrients + nutrientId
-        } else {
-            visibleNutrients
-        }
+    val preview = remember(visibleNutrients, sort, showTemporaryNutrient, nutrientColors, uniformNutrientWidth, nutrientWidth) {
+        val sortedId = sort.nutrientId
+        val ids = if (showTemporaryNutrient && sort.type == SortType.NUTRIENT && sortedId != null) {
+            visibleNutrients + sortedId
+        } else visibleNutrients
+        NutrientPreview(ids, nutrientColors, uniformNutrientWidth, nutrientWidth)
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(bottom = bottomPadding)
-        ) {
-            // Search Bar — fully rounded and filled, like a real search bar
+    Column(
+        modifier = Modifier.fillMaxSize().statusBarsPadding(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Column(Modifier.widthIn(max = Spacing.maxContentWidth).fillMaxWidth()) {
             TextField(
-                value = textFieldValue,
+                value = fieldValue,
                 onValueChange = {
-                    textFieldValue = it
-                    if (it.text != query) {
-                        viewModel.onSearchQueryChange(it.text)
-                    }
+                    fieldValue = it
+                    if (it.text != query) viewModel.onSearchQueryChange(it.text)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(start = Spacing.gutter, end = Spacing.gutter, top = Spacing.m, bottom = Spacing.xs)
                     .focusRequester(focusRequester),
-                placeholder = { Text("Wpisz nazwę produktu...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Szukaj") },
-                trailingIcon = if (textFieldValue.text.isNotEmpty()) {
+                placeholder = { Text(stringResource(R.string.search_placeholder)) },
+                leadingIcon = { AppIcon(AppSymbols.Search, contentDescription = null) },
+                trailingIcon = if (fieldValue.text.isNotEmpty()) {
                     {
-                        IconButton(onClick = {
-                            textFieldValue = TextFieldValue("")
-                            viewModel.onSearchQueryChange("")
-                        }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Wyczyść")
-                        }
+                        IconButton(
+                            onClick = {
+                                fieldValue = TextFieldValue("")
+                                viewModel.onSearchQueryChange("")
+                            },
+                            shapes = IconButtonDefaults.shapes(),
+                        ) { AppIcon(AppSymbols.Close, contentDescription = stringResource(R.string.action_clear)) }
                     }
                 } else null,
                 shape = CircleShape,
+                singleLine = true,
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
+                    disabledIndicatorColor = Color.Transparent,
                 ),
-                singleLine = true
             )
-
-            if (uiState is SearchUiState.Success) {
-                SortSection(
-                    currentSort = sort,
-                    onSortChange = { viewModel.setSort(it) }
-                )
+            AnimatedVisibility(
+                visible = uiState is SearchUiState.Success && (uiState as SearchUiState.Success).products.size > 1,
+                enter = expandVertically(MaterialTheme.motionScheme.defaultSpatialSpec()) + fadeIn(),
+                exit = shrinkVertically(MaterialTheme.motionScheme.fastSpatialSpec()) + fadeOut(),
+            ) {
+                SortRow(sort, onSortChange = { haptics.tick(); viewModel.setSort(it) })
             }
+        }
 
-            Spacer(modifier = Modifier.height(8.dp))
+        val fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
 
-            // Content
-            Box(modifier = Modifier.fillMaxSize()) {
-                when (val state = uiState) {
-                    is SearchUiState.Idle -> {
-                        SearchTutorial(query)
-                    }
-                    is SearchUiState.Loading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center)
+        val fadeOutSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+
+        AnimatedContent(
+            targetState = uiState,
+            contentKey = { it::class },
+            transitionSpec = { fadeIn(fadeInSpec) togetherWith fadeOut(fadeOutSpec) },
+            modifier = Modifier.fillMaxSize(),
+            label = "searchState",
+        ) { state ->
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                when (state) {
+                    is SearchUiState.Idle -> CenteredScroll {
+                        val short = query.isNotBlank()
+                        EmptyState(
+                            symbol = if (short) AppSymbols.Search else AppSymbols.ManageSearch,
+                            title = stringResource(if (short) R.string.search_keep_typing else R.string.search_start_title),
+                            body = stringResource(if (short) R.string.search_keep_typing_body else R.string.search_start_body),
                         )
                     }
-                    is SearchUiState.Error -> {
-                        pl.dakil.healthyshopping.ui.components.StandardError(
-                            errorType = state.errorType,
-                            customMessage = state.message,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
-                    is SearchUiState.Success -> {
-                        if (state.products.isEmpty()) {
-                            Text(
-                                text = "Brak wyników",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                modifier = Modifier.align(Alignment.Center)
+                    is SearchUiState.Loading -> LoadingIndicator(Modifier.padding(top = 96.dp).size(64.dp))
+                    is SearchUiState.Error -> CenteredScroll { ErrorState(state.errorType) }
+                    is SearchUiState.Success -> if (state.products.isEmpty()) {
+                        CenteredScroll {
+                            EmptyState(
+                                symbol = AppSymbols.SearchOff,
+                                title = stringResource(R.string.search_no_results),
+                                body = stringResource(R.string.search_no_results_body),
                             )
-                        } else {
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(vertical = 8.dp)
-                            ) {
-                                items(state.products) { product ->
-                                    ProductListItem(
-                                        product = product,
-                                        visibleNutrientIds = effectiveVisibleNutrients,
-                                        nutrientColors = nutrientColors,
-                                        sort = sort,
-                                        uniformNutrientWidth = uniformNutrientWidth,
-                                        nutrientWidth = nutrientWidth,
-                                        isInComparison = product.ean != null && product.ean in comparisonEans,
-                                        onClick = { product.ean?.let { onProductClicked(it) } },
-                                        onToggleComparison = {
-                                            product.ean?.let { ean ->
-                                                if (ean in comparisonEans) {
-                                                    settingsViewModel.removeFromComparison(ean)
-                                                } else {
-                                                    settingsViewModel.addToComparison(ean)
-                                                }
-                                            }
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.widthIn(max = Spacing.maxContentWidth).fillMaxSize(),
+                            contentPadding = PaddingValues(start = Spacing.gutter, end = Spacing.gutter, top = Spacing.s, bottom = bottomBarPadding(Spacing.xl)),
+                            verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
+                        ) {
+                            itemsIndexed(state.products, key = { i, p -> p.ean ?: "i$i" }) { index, product ->
+                                ProductRow(
+                                    product = product,
+                                    index = index,
+                                    count = state.products.size,
+                                    preview = preview,
+                                    sort = sort,
+                                    isInComparison = product.ean != null && product.ean in comparisonEans,
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        product.ean?.let(onProductClicked)
+                                    },
+                                    onToggleComparison = {
+                                        product.ean?.let { ean ->
+                                            if (ean in comparisonEans) settingsViewModel.removeFromComparison(ean)
+                                            else settingsViewModel.addToComparison(ean)
                                         }
-                                    )
-                                }
+                                    },
+                                    modifier = Modifier.animateItem(),
+                                )
                             }
                         }
                     }
@@ -228,334 +255,201 @@ fun SearchScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ProductListItem(
-    product: SearchProduct,
-    visibleNutrientIds: Set<String>,
-    nutrientColors: Map<String, String>,
-    sort: SearchSort,
-    uniformNutrientWidth: Boolean,
-    nutrientWidth: Int,
-    isInComparison: Boolean,
-    onClick: () -> Unit,
-    onToggleComparison: () -> Unit
-) {
-    val context = LocalContext.current
-    var showContextMenu by remember { mutableStateOf(false) }
-
-    Box {
-        ListItem(
-            modifier = Modifier.combinedClickable(
-                onClick = onClick,
-                onLongClick = { showContextMenu = true }
-            ),
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-            leadingContent = {
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (product.image?.url != null) {
-                        AsyncImage(
-                            model = product.image.url,
-                            contentDescription = product.name,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.ImageNotSupported,
-                            contentDescription = "Brak zdjęcia",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
-            },
-            headlineContent = {
-                Text(
-                    text = product.name ?: "Nieznany produkt",
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            },
-            supportingContent = {
-                NutrientPreviewRow(
-                    product = product,
-                    visibleNutrientIds = visibleNutrientIds,
-                    nutrientColors = nutrientColors,
-                    sort = sort,
-                    uniformNutrientWidth = uniformNutrientWidth,
-                    nutrientWidth = nutrientWidth
-                )
-            },
-            trailingContent = {
-                val scoreColorHex = product.score?.color ?: "#CCCCCC"
-                val scoreColor = try {
-                    Color(android.graphics.Color.parseColor(scoreColorHex))
-                } catch (e: Exception) {
-                    MaterialTheme.colorScheme.primary
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(scoreColor),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = product.score?.value?.toString() ?: "?",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            }
-        )
-
-        // Context menu anchored to the bottom-right corner of the item.
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp)
-        ) {
-            DropdownMenu(
-                expanded = showContextMenu,
-                onDismissRequest = { showContextMenu = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text(if (isInComparison) "Usuń z porównywarki" else "Dodaj do porównywarki") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = if (isInComparison) Icons.Default.CheckCircle else Icons.Default.AddChart,
-                            contentDescription = null
-                        )
-                    },
-                    onClick = {
-                        onToggleComparison()
-                        showContextMenu = false
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("Udostępnij") },
-                    leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) },
-                    onClick = {
-                        val shareText = buildString {
-                            product.name?.let { append(it).append("\n") }
-                            append("https://zdrowezakupy.org/product/${product.ean}")
-                        }
-                        val sendIntent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_TEXT, shareText)
-                            type = "text/plain"
-                        }
-                        context.startActivity(Intent.createChooser(sendIntent, null))
-                        showContextMenu = false
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun SearchTutorial(query: String) {
+private fun CenteredScroll(content: @Composable () -> Unit) {
     Column(
-        modifier = Modifier
+        Modifier
             .fillMaxSize()
-            .padding(32.dp),
+            .verticalScroll(rememberScrollState())
+            .padding(top = Spacing.xxl, bottom = bottomBarPadding(Spacing.xl)),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        val trimmed = query.trim()
-        val isShort = trimmed.isNotEmpty() && trimmed.length < 3
-        
-        val icon = if (isShort) Icons.Default.Info else Icons.Default.Search
-        val iconColor = if (isShort) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
-        
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .background(iconColor.copy(alpha = 0.1f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = iconColor
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        val title = if (isShort) "Wpisz jeszcze trochę..." else "Zacznij szukać!"
-        val description = if (isShort) {
-            val remaining = 3 - trimmed.length
-            "Wyszukiwarka potrzebuje co najmniej 3 znaków. Wpisz jeszcze co najmniej $remaining ${if (remaining == 1) "znak" else "znaki"}."
-        } else {
-            "Wpisz nazwę produktu, aby sprawdzić jego skład i wpływ na zdrowie."
-        }
-        
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+    ) { content() }
 }
 
 @Composable
-fun TutorialItem(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+private fun SortRow(current: SearchSort, onSortChange: (SearchSort) -> Unit) {
+    fun toggled(type: SortType, nutrientId: String?): SearchSort {
+        val same = current.type == type && current.nutrientId == nutrientId
+        val order = if (same && current.order == SortOrder.DESCENDING) SortOrder.ASCENDING else SortOrder.DESCENDING
+        return SearchSort(type = type, order = order, nutrientId = nutrientId)
     }
-}
-
-@Composable
-fun SortSection(
-    currentSort: SearchSort,
-    onSortChange: (SearchSort) -> Unit
-) {
-    val scrollState = rememberScrollState()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .horizontalScroll(scrollState)
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = Spacing.gutter, vertical = Spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
     ) {
-        // Score Sort
         SortChip(
-            label = "Wynik",
-            isSelected = currentSort.type == SortType.SCORE,
-            order = if (currentSort.type == SortType.SCORE) currentSort.order else null,
-            onClick = {
-                val newOrder = if (currentSort.type == SortType.SCORE && currentSort.order == SortOrder.DESCENDING) {
-                    SortOrder.ASCENDING
-                } else {
-                    SortOrder.DESCENDING
-                }
-                onSortChange(SearchSort(type = SortType.SCORE, order = newOrder))
-            }
+            label = stringResource(R.string.search_sort_score),
+            selected = current.type == SortType.SCORE,
+            order = current.order,
+            onClick = { onSortChange(toggled(SortType.SCORE, null)) },
         )
-
-        // Nutrient Sorts
         AVAILABLE_NUTRIENTS.forEach { nutrient ->
             SortChip(
-                label = nutrient.name,
-                isSelected = currentSort.type == SortType.NUTRIENT && currentSort.nutrientId == nutrient.id,
-                order = if (currentSort.type == SortType.NUTRIENT && currentSort.nutrientId == nutrient.id) currentSort.order else null,
-                onClick = {
-                    val newOrder = if (currentSort.type == SortType.NUTRIENT && currentSort.nutrientId == nutrient.id && currentSort.order == SortOrder.DESCENDING) {
-                        SortOrder.ASCENDING
-                    } else {
-                        SortOrder.DESCENDING
-                    }
-                    onSortChange(SearchSort(type = SortType.NUTRIENT, order = newOrder, nutrientId = nutrient.id))
-                }
+                label = stringResource(nutrientNameRes(nutrient.id)),
+                selected = current.type == SortType.NUTRIENT && current.nutrientId == nutrient.id,
+                order = current.order,
+                onClick = { onSortChange(toggled(SortType.NUTRIENT, nutrient.id)) },
             )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** A sort chip whose arrow flips with a spring when the order reverses. */
 @Composable
-fun SortChip(
-    label: String,
-    isSelected: Boolean,
-    order: SortOrder?,
-    onClick: () -> Unit
-) {
+private fun SortChip(label: String, selected: Boolean, order: SortOrder, onClick: () -> Unit) {
+    val rotation by animateFloatAsState(
+        targetValue = if (order == SortOrder.DESCENDING) 0f else 180f,
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+        label = "sortArrow",
+    )
     FilterChip(
-        selected = isSelected,
+        selected = selected,
         onClick = onClick,
         label = { Text(label) },
-        leadingIcon = if (isSelected) {
+        shape = CircleShape,
+        leadingIcon = if (selected) {
             {
-                Icon(
-                    imageVector = if (order == SortOrder.DESCENDING) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
+                AppIcon(
+                    AppSymbols.ArrowDownward,
+                    contentDescription = stringResource(
+                        if (order == SortOrder.DESCENDING) R.string.cd_sort_descending else R.string.cd_sort_ascending
+                    ),
+                    modifier = Modifier.size(FilterChipDefaults.IconSize).graphicsLayer { rotationZ = rotation },
                 )
             }
-        } else null
+        } else null,
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun NutrientPreviewRow(
+private fun ProductRow(
     product: SearchProduct,
-    visibleNutrientIds: Set<String>,
-    nutrientColors: Map<String, String>,
+    index: Int,
+    count: Int,
+    preview: NutrientPreview,
     sort: SearchSort,
-    uniformNutrientWidth: Boolean,
-    nutrientWidth: Int
+    isInComparison: Boolean,
+    onClick: () -> Unit,
+    onToggleComparison: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    val nutrientsToShow = product.nutrients?.nutrients?.filter { 
-        visibleNutrientIds.contains(it.id) 
-    } ?: emptyList()
+    val haptics = rememberHaptics()
+    val context = LocalContext.current
+    var menuOpen by remember { mutableStateOf(false) }
+    val shareTitle = stringResource(R.string.action_share)
+    val shareText = buildString {
+        product.name?.let { append(it).append("\n") }
+        append("https://zdrowezakupy.org/product/${product.ean}")
+    }
 
-    if (nutrientsToShow.isEmpty()) return
-
-    FlowRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        nutrientsToShow.forEach { nutrient ->
-            val colorHex = nutrientColors[nutrient.id] ?: "#CCCCCC"
-            val color = try { Color(android.graphics.Color.parseColor(colorHex)) } catch (e: Exception) { Color.Gray }
-            
-            val value = nutrient.details?.value ?: ""
-            val unit = nutrient.details?.unit ?: ""
-            val displayValue = if (value.isEmpty()) "-" else "$value $unit"
-            
-            val isSortedNutrient = sort.type == SortType.NUTRIENT && sort.nutrientId == nutrient.id
-            
+    Box(modifier) {
+        SegmentedListItem(
+            onClick = onClick,
+            onLongClick = {
+                haptics.longPress()
+                menuOpen = true
+            },
+            onLongClickLabel = stringResource(R.string.cd_more_options),
+            shapes = ListItemDefaults.segmentedShapes(index, count),
+            colors = segmentedItemColors(),
+            leadingContent = {
+                ProductImage(
+                    url = product.image?.url,
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.size(56.dp),
+                )
+            },
+            supportingContent = {
+                NutrientPreviewRow(product, preview, sort)
+            },
+            trailingContent = {
+                Box(contentAlignment = Alignment.BottomEnd) {
+                    ScoreBadge(product.score, size = 44.dp)
+                    if (isInComparison) {
+                        Box(
+                            Modifier
+                                .size(18.dp)
+                                .background(MaterialTheme.colorScheme.primary, CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            AppIcon(
+                                AppSymbols.CompareArrows,
+                                contentDescription = stringResource(R.string.cd_in_comparison),
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(12.dp),
+                            )
+                        }
+                    }
+                }
+            },
+        ) {
             Text(
-                text = displayValue,
-                style = MaterialTheme.typography.labelMedium,
-                color = color,
-                fontWeight = if (isSortedNutrient) FontWeight.Bold else FontWeight.Normal,
-                modifier = if (uniformNutrientWidth) Modifier.widthIn(min = nutrientWidth.dp) else Modifier
+                product.name ?: stringResource(R.string.product_unknown),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
+        }
+
+        AppMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            AppMenuGroup {
+                AppMenuItem(
+                    text = stringResource(if (isInComparison) R.string.comparison_remove else R.string.comparison_add),
+                    symbol = if (isInComparison) AppSymbols.Delete else AppSymbols.AddChart,
+                    onClick = {
+                        if (isInComparison) haptics.toggle(false) else haptics.confirm()
+                        onToggleComparison()
+                        menuOpen = false
+                    },
+                )
+                AppMenuItem(
+                    text = shareTitle,
+                    symbol = AppSymbols.Share,
+                    enabled = product.ean != null,
+                    onClick = {
+                        menuOpen = false
+                        val send = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, shareText)
+                        }
+                        context.startActivity(Intent.createChooser(send, shareTitle))
+                    },
+                )
+            }
+        }
+    }
+}
+
+/** The nutrients the user picked, each as a value with a dot in the user's color for it. */
+@Composable
+private fun NutrientPreviewRow(product: SearchProduct, preview: NutrientPreview, sort: SearchSort) {
+    val nutrients = product.nutrients?.nutrients?.filter { it.id in preview.visibleIds }.orEmpty()
+    if (nutrients.isEmpty()) return
+    FlowRow(
+        modifier = Modifier.padding(top = Spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
+    ) {
+        nutrients.forEach { nutrient ->
+            val color = parseHexColor(preview.colors[nutrient.id]) ?: MaterialTheme.colorScheme.outline
+            val value = nutrient.details?.value?.takeIf { it.isNotBlank() }
+            val text = if (value == null) "–" else "$value ${nutrient.details.unit.orEmpty()}".trim()
+            val sorted = sort.type == SortType.NUTRIENT && sort.nutrientId == nutrient.id
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = if (preview.uniformWidth) Modifier.widthIn(min = preview.width.dp) else Modifier,
+            ) {
+                Box(Modifier.size(8.dp).background(color, CircleShape))
+                Text(
+                    text,
+                    style = MaterialTheme.typography.labelMedium.tabular(),
+                    fontWeight = if (sorted) FontWeight.Bold else FontWeight.Normal,
+                    color = if (sorted) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = Spacing.xs),
+                )
+            }
         }
     }
 }

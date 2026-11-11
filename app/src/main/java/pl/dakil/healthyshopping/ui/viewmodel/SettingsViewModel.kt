@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.StateFlow
 import pl.dakil.healthyshopping.data.repository.AppColorTheme
 import pl.dakil.healthyshopping.data.repository.DarkThemeOption
+import pl.dakil.healthyshopping.data.repository.ProgressStyle
 import pl.dakil.healthyshopping.data.repository.SettingsRepository
 import pl.dakil.healthyshopping.data.repository.SearchAutoFocusOption
 import pl.dakil.healthyshopping.data.model.SearchProduct
@@ -12,6 +13,11 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
     val colorTheme: StateFlow<AppColorTheme> = repository.colorTheme
     val darkThemeOption: StateFlow<DarkThemeOption> = repository.darkThemeOption
     val pureBlack: StateFlow<Boolean> = repository.pureBlack
+
+    val hapticsEnabled: StateFlow<Boolean> = repository.hapticsEnabled
+    val animatedNumbers: StateFlow<Boolean> = repository.animatedNumbers
+    val decorativeAnimations: StateFlow<Boolean> = repository.decorativeAnimations
+    val progressStyle: StateFlow<ProgressStyle> = repository.progressStyle
 
     val showGroupedIngredients: StateFlow<Boolean> = repository.showGroupedIngredients
 
@@ -33,6 +39,11 @@ class SettingsViewModel(private val repository: SettingsRepository) : ViewModel(
 
     val detailsSectionOrder: StateFlow<List<String>> = repository.detailsSectionOrder
     val hiddenDetailsSections: StateFlow<Set<String>> = repository.hiddenDetailsSections
+
+    fun setHapticsEnabled(enabled: Boolean) = repository.setHapticsEnabled(enabled)
+    fun setAnimatedNumbers(enabled: Boolean) = repository.setAnimatedNumbers(enabled)
+    fun setDecorativeAnimations(enabled: Boolean) = repository.setDecorativeAnimations(enabled)
+    fun setProgressStyle(style: ProgressStyle) = repository.setProgressStyle(style)
 
     fun setColorTheme(theme: AppColorTheme) {
         repository.setColorTheme(theme)

@@ -1,565 +1,510 @@
 package pl.dakil.healthyshopping.ui.screens
 
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.CompareArrows
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import pl.dakil.healthyshopping.R
 import pl.dakil.healthyshopping.data.model.ProductResponse
-import pl.dakil.healthyshopping.ui.theme.ingredient_light_green
-import pl.dakil.healthyshopping.ui.theme.ingredient_light_red
+import pl.dakil.healthyshopping.ui.components.ErrorState
+import pl.dakil.healthyshopping.ui.components.NutrientKind
+import pl.dakil.healthyshopping.ui.components.ProductImage
+import pl.dakil.healthyshopping.ui.components.ScoreBadge
+import pl.dakil.healthyshopping.ui.components.displayValue
+import pl.dakil.healthyshopping.ui.components.find
+import pl.dakil.healthyshopping.ui.components.harmLevel
+import pl.dakil.healthyshopping.ui.components.parseNutrientNumber
+import pl.dakil.healthyshopping.ui.components.toneOrNeutral
+import pl.dakil.healthyshopping.ui.designsystem.AppLinearProgress
+import pl.dakil.healthyshopping.ui.designsystem.CollapsingScaffold
+import pl.dakil.healthyshopping.ui.designsystem.EmptyState
+import pl.dakil.healthyshopping.ui.designsystem.FormSheet
+import pl.dakil.healthyshopping.ui.designsystem.ShapedIcon
+import pl.dakil.healthyshopping.ui.designsystem.bottomBarPadding
+import pl.dakil.healthyshopping.ui.designsystem.entrance
+import pl.dakil.healthyshopping.ui.designsystem.icon.AppIcon
+import pl.dakil.healthyshopping.ui.designsystem.icon.AppSymbols
+import pl.dakil.healthyshopping.ui.designsystem.pressScale
+import pl.dakil.healthyshopping.ui.designsystem.rememberHaptics
+import pl.dakil.healthyshopping.ui.designsystem.segmentedItemShape
+import pl.dakil.healthyshopping.ui.screens.settings.SectionHeader
+import pl.dakil.healthyshopping.ui.theme.SegmentedShapes
+import pl.dakil.healthyshopping.ui.theme.Spacing
+import pl.dakil.healthyshopping.ui.theme.phraseTone
+import pl.dakil.healthyshopping.ui.theme.tabular
 import pl.dakil.healthyshopping.ui.viewmodel.ComparisonUiState
 import pl.dakil.healthyshopping.ui.viewmodel.ComparisonViewModel
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import pl.dakil.healthyshopping.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
+private val LabelWidth = 112.dp
+private val ColumnWidth = 124.dp
+private val ScrollFadeWidth = 36.dp
+
 @Composable
 fun ComparisonScreen(
     viewModel: ComparisonViewModel,
+    comparisonCount: Int,
     showHighlightedIngredients: Boolean,
-    bottomPadding: Dp = 0.dp,
-    onProductClicked: (String) -> Unit
+    onProductClicked: (String) -> Unit,
+    onRemoveProduct: (String) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var confirmClear by rememberSaveable { mutableStateOf(false) }
+    // Removing one product reloads them all; keep the last table on screen meanwhile.
+    var lastProducts by remember { mutableStateOf<List<ProductResponse>>(emptyList()) }
+    LaunchedEffect(uiState) {
+        (uiState as? ComparisonUiState.Success)?.let { lastProducts = it.products }
+    }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Porównywarka") },
-                actions = {
-                    if (uiState is ComparisonUiState.Success && (uiState as ComparisonUiState.Success).products.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.clearComparison() }) {
-                            Icon(
-                                imageVector = Icons.Default.DeleteSweep,
-                                contentDescription = "Wyczyść wszystko"
-                            )
-                        }
-                    }
-                },
-                colors = pl.dakil.healthyshopping.ui.components.flatTopAppBarColors()
-            )
+    CollapsingScaffold(
+        title = stringResource(R.string.comparison_title),
+        subtitle = if (comparisonCount > 0) {
+            pluralStringResource(R.plurals.comparison_count, comparisonCount, comparisonCount)
+        } else null,
+        large = true,
+        // A tab root: the overlaid navigation bar supplies the bottom inset (bottomBarPadding).
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        actions = {
+            if (comparisonCount > 0) {
+                IconButton(onClick = { confirmClear = true }, shapes = IconButtonDefaults.shapes()) {
+                    AppIcon(AppSymbols.DeleteSweep, contentDescription = stringResource(R.string.comparison_clear))
+                }
+            }
         },
-        containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)
     ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(bottom = bottomPadding),
-            contentAlignment = Alignment.Center
-        ) {
-            when (uiState) {
-                is ComparisonUiState.Loading -> {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.TopCenter) {
+            val state = uiState
+            when {
+                comparisonCount == 0 -> EmptyComparison()
+                state is ComparisonUiState.Error -> Column(
+                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = bottomBarPadding()),
+                    verticalArrangement = Arrangement.Center,
+                ) { ErrorState(state.errorType, onRetry = { viewModel.refreshComparison() }) }
+                state is ComparisonUiState.Success ->
+                    ComparisonTable(state.products, showHighlightedIngredients, onProductClicked, onRemoveProduct)
+                lastProducts.isNotEmpty() -> {
+                    ComparisonTable(lastProducts, showHighlightedIngredients, onProductClicked, onRemoveProduct)
+                    AppLinearProgress(Modifier.fillMaxWidth().padding(horizontal = Spacing.gutter))
                 }
-                is ComparisonUiState.Success -> {
-                    val products = (uiState as ComparisonUiState.Success).products
-                    if (products.isEmpty()) {
-                        EmptyComparisonContent()
-                    } else {
-                        ComparisonTable(
-                            products = products,
-                            showHighlightedIngredients = showHighlightedIngredients,
-                            onProductClicked = onProductClicked
-                        )
-                    }
-                }
-                is ComparisonUiState.Error -> {
-                    val state = uiState as ComparisonUiState.Error
-                    pl.dakil.healthyshopping.ui.components.StandardError(
-                        errorType = state.errorType,
-                        customMessage = state.message,
-                        onRetry = { viewModel.refreshComparison() }
-                    )
-                }
-                else -> {}
-            }
-        }
-    }
-}
-
-@Composable
-fun ComparisonTable(
-    products: List<ProductResponse>,
-    showHighlightedIngredients: Boolean,
-    onProductClicked: (String) -> Unit
-) {
-    val horizontalScrollState = rememberScrollState()
-    val verticalScrollState = rememberScrollState()
-
-    val labelWidth = 140.dp
-    val columnWidth = 180.dp
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Table Header (Sticky vertically)
-        Row(
-            modifier = Modifier
-                .horizontalScroll(horizontalScrollState)
-                .background(MaterialTheme.colorScheme.surfaceContainer)
-        ) {
-            // Top-left corner cell
-            Box(modifier = Modifier.width(labelWidth).height(200.dp))
-
-            products.forEach { product ->
-                Column(
-                    modifier = Modifier
-                        .width(columnWidth)
-                        .height(200.dp)
-                        .clickable { product.ean?.let { onProductClicked(it) } }
-                        .padding(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    if (product.image?.url != null) {
-                        AsyncImage(
-                            model = product.image.url,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(100.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .size(100.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Default.Image,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = product.name ?: "Nieznany",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        maxLines = 2,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
-
-        HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
-
-        // Table Body
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(verticalScrollState)
-            ) {
-                // Table Rows
-                DataTableContent(
-                    products = products,
-                    labelWidth = labelWidth,
-                    columnWidth = columnWidth,
-                    horizontalScrollState = horizontalScrollState,
-                    showHighlightedIngredients = showHighlightedIngredients
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun DataTableContent(
-    products: List<ProductResponse>,
-    labelWidth: androidx.compose.ui.unit.Dp,
-    columnWidth: androidx.compose.ui.unit.Dp,
-    horizontalScrollState: ScrollState,
-    showHighlightedIngredients: Boolean
-) {
-    // 1. Health Score
-    TableDataRow(
-        label = "Wynik",
-        labelWidth = labelWidth,
-        columnWidth = columnWidth,
-        horizontalScrollState = horizontalScrollState,
-        items = products
-    ) { product ->
-        val score = product.score?.value
-        val colorHex = product.score?.color
-        
-        val defaultScoreColor = MaterialTheme.colorScheme.primary
-        val scoreColor = remember(colorHex, defaultScoreColor) {
-            try {
-                if (colorHex != null) Color(android.graphics.Color.parseColor(colorHex)) else defaultScoreColor
-            } catch (e: Exception) {
-                defaultScoreColor
-            }
-        }
-
-        if (score != null) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(scoreColor, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = score.toString(),
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        } else {
-            DataMissingText()
-        }
-    }
-
-    // 3. Nutrients
-    val nutrientLabels = listOf(
-        "Energia" to listOf("energetyczna", "energia", "kalorie"),
-        "Tłuszcz" to listOf("tłuszcz"),
-        "Kw. nasycone" to listOf("nasycone"),
-        "Węglowodany" to listOf("węglowodany"),
-        "Cukry" to listOf("cukry"),
-        "Białko" to listOf("białko"),
-        "Sól" to listOf("sól"),
-        "Błonnik" to listOf("błonnik")
-    )
-
-    SectionHeader("Wartości odżywcze (100g/ml)", labelWidth, products.size, columnWidth, horizontalScrollState)
-
-    nutrientLabels.forEach { (displayName, searchKeys) ->
-        TableDataRow(
-            label = displayName,
-            labelWidth = labelWidth,
-            columnWidth = columnWidth,
-            horizontalScrollState = horizontalScrollState,
-            items = products
-        ) { product ->
-            val nutrient = product.nutrientValues?.nutrients?.find { nut ->
-                val lowerName = nut.name?.lowercase() ?: ""
-                searchKeys.any { key -> lowerName.contains(key) }
-            }
-            if (nutrient?.details?.value != null) {
-                Text(
-                    text = "${nutrient.details.value} ${nutrient.details.unit ?: ""}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            } else {
-                DataMissingText()
+                else -> LoadingIndicator(Modifier.padding(top = 96.dp).size(64.dp))
             }
         }
     }
 
-    // 4. Ingredients Counts
-    SectionHeader("Składniki", labelWidth, products.size, columnWidth, horizontalScrollState)
-
-    val harmfulLevels = listOf(5, 4, 3, 2, 1)
-    val levelNames = listOf("B. szkodliwe", "Szkodliwe", "Podejrzane", "Neutralne", "Korzystne")
-
-    harmfulLevels.forEachIndexed { index, level ->
-        TableDataRow(
-            label = levelNames[index],
-            labelWidth = labelWidth,
-            columnWidth = columnWidth,
-            horizontalScrollState = horizontalScrollState,
-            items = products
-        ) { product ->
-            val levelIngredients = product.ingredients?.filter { it.harmfulLevel == level } ?: emptyList()
-            if (levelIngredients.isNotEmpty()) {
-                val names = levelIngredients.map { it.displayName ?: it.name ?: "Nieznany" }.joinToString(", ")
-                Text(
-                    text = names,
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(4.dp)
-                )
-            } else {
-                Text(text = "brak", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
-            }
-        }
-    }
-
-    // 5. Full Description
-    SectionHeader("Pełny skład", labelWidth, products.size, columnWidth, horizontalScrollState)
-    TableDataRow(
-        label = "Opis",
-        labelWidth = labelWidth,
-        columnWidth = columnWidth,
-        horizontalScrollState = horizontalScrollState,
-        items = products
-    ) { product ->
-        val description = product.description
-        if (!description.isNullOrBlank()) {
-            val isDark = isSystemInDarkTheme()
-            val annotatedString = if (showHighlightedIngredients && !product.ingredientPhrases.isNullOrEmpty()) {
-                buildAnnotatedString {
-                    append(description)
-                    product.ingredientPhrases.forEach { phraseInfo ->
-                        val phrase = phraseInfo.phrase ?: return@forEach
-                        val apiHex = phraseInfo.backgroundColor ?: ""
-                        val colors = translateComparisonIngredientColor(apiHex, isDark)
-                        
-                        var start = description.indexOf(phrase, ignoreCase = true)
-                        while (start != -1) {
-                            addStyle(
-                                SpanStyle(background = colors.first, color = colors.second),
-                                start,
-                                start + phrase.length
-                            )
-                            start = description.indexOf(phrase, start + phrase.length, ignoreCase = true)
-                        }
-                    }
-                }
-            } else {
-                buildAnnotatedString { append(description) }
-            }
-
-            Text(
-                text = annotatedString,
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Start,
-                modifier = Modifier.padding(4.dp)
-            )
-        } else {
-            DataMissingText()
-        }
-    }
-    
-    Spacer(modifier = Modifier.height(32.dp))
-}
-
-
-
-@Composable
-fun <T> TableDataRow(
-    label: String,
-    labelWidth: androidx.compose.ui.unit.Dp,
-    columnWidth: androidx.compose.ui.unit.Dp,
-    horizontalScrollState: ScrollState,
-    items: List<T>,
-    content: @Composable (T) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(horizontalScrollState)
-            .height(IntrinsicSize.Min)
-    ) {
-        // Fixed label column part
-        Box(
-            modifier = Modifier
-                .width(labelWidth)
-                .fillMaxHeight()
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                .padding(12.dp),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        items.forEach { item ->
-            Box(
-                modifier = Modifier
-                    .width(columnWidth)
-                    .fillMaxHeight()
-                    .padding(12.dp)
-                    .drawBehind {
-                        drawLine(
-                            color = Color.LightGray.copy(alpha = 0.5f),
-                            start = Offset(0f, 0f),
-                            end = Offset(0f, this.size.height),
-                            strokeWidth = 1f
-                        )
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                content(item)
-            }
-        }
-    }
-    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-}
-
-@Composable
-fun SectionHeader(
-    title: String,
-    labelWidth: androidx.compose.ui.unit.Dp,
-    productsCount: Int,
-    columnWidth: androidx.compose.ui.unit.Dp,
-    horizontalScrollState: ScrollState
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(horizontalScrollState)
-            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
-            .padding(vertical = 4.dp)
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.width(labelWidth + (columnWidth * productsCount)).padding(horizontal = 12.dp),
-            color = MaterialTheme.colorScheme.primary
+    if (confirmClear) {
+        FormSheet(
+            title = stringResource(R.string.comparison_clear_title),
+            symbol = AppSymbols.DeleteSweep,
+            supportingText = stringResource(R.string.comparison_clear_body),
+            onDismiss = { confirmClear = false },
+            dismissLabel = stringResource(R.string.action_cancel),
+            confirmLabel = stringResource(R.string.action_clear),
+            destructive = true,
+            onConfirm = {
+                viewModel.clearComparison()
+                confirmClear = false
+            },
         )
     }
-    HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
 }
 
 @Composable
-fun DataMissingText() {
-    Text(
-        text = "Brak danych",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-        textAlign = TextAlign.Center
-    )
-}
-
-@Composable
-fun EmptyComparisonContent() {
+private fun EmptyComparison() {
     Column(
-        modifier = Modifier
+        Modifier
+            .widthIn(max = Spacing.maxContentWidth)
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(32.dp),
+            .padding(horizontal = Spacing.gutter)
+            .padding(bottom = bottomBarPadding(Spacing.xl)),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
     ) {
-        val iconColor = MaterialTheme.colorScheme.primary
-        
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .background(iconColor.copy(alpha = 0.1f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.CompareArrows,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = iconColor
-            )
+        EmptyState(
+            symbol = AppSymbols.CompareArrows,
+            title = stringResource(R.string.comparison_empty_title),
+            body = stringResource(R.string.comparison_empty_body),
+            modifier = Modifier.entrance(0),
+        )
+        val steps = listOf(
+            AppSymbols.Search to R.string.comparison_step_1,
+            AppSymbols.AddChart to R.string.comparison_step_2,
+            AppSymbols.CompareArrows to R.string.comparison_step_3,
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(SegmentedShapes.gap)) {
+            steps.forEachIndexed { index, (symbol, text) ->
+                Surface(
+                    shape = segmentedItemShape(index, steps.size),
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    modifier = Modifier.fillMaxWidth().entrance(index + 1),
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = Spacing.l, vertical = Spacing.m),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.l),
+                    ) {
+                        ShapedIcon(symbol)
+                        Text(stringResource(text), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                    }
+                }
+            }
         }
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        Text(
-            text = "Twoja porównywarka jest pusta",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Text(
-            text = "Dodaj produkty, aby zobaczyć ich zestawienie i łatwiej wybrać najzdrowszą opcję.",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        
-        Spacer(modifier = Modifier.height(48.dp))
-        
-        Text(
-            text = "Jak dodać produkty?",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        TutorialStep(
-            number = "1",
-            text = "Znajdź interesujący Cię produkt w wyszukiwarce lub zeskanuj kod."
-        )
-        
-        TutorialStep(
-            number = "2",
-            text = "Na ekranie szczegółów produktu kliknij ikonę plusa (+) w górnym pasku."
-        )
-        
-        TutorialStep(
-            number = "3",
-            text = "Wróć tutaj, aby zobaczyć porównanie dodanych produktów."
-        )
     }
 }
 
 @Composable
-fun TutorialStep(number: String, text: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.Top
+private fun ComparisonTable(
+    products: List<ProductResponse>,
+    highlight: Boolean,
+    onProductClicked: (String) -> Unit,
+    onRemoveProduct: (String) -> Unit,
+) {
+    val hScroll = rememberScrollState()
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = Spacing.gutter)
+            .padding(top = Spacing.s, bottom = bottomBarPadding(Spacing.xl)),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
     ) {
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = number,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            )
+        // Product cards, scrolling sideways together with every row below.
+        Row(Modifier.fillMaxWidth()) {
+            Box(Modifier.width(LabelWidth))
+            ScrollingCells(hScroll, fadeColor = MaterialTheme.colorScheme.surface) {
+                products.forEach { product ->
+                    ProductHeaderCard(product, onProductClicked, onRemoveProduct)
+                }
+            }
         }
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+
+        SectionHeader(stringResource(R.string.section_score))
+        TableGroup {
+            val best = bestIndex(products.map { it.score?.value?.toDouble() }, lowerIsBetter = false)
+            TableRow(stringResource(R.string.comparison_row_score), products, hScroll, 0, 1) { i, product ->
+                ValueCell(product.score?.value?.toString(), best == i)
+            }
+        }
+
+        val unit = products.firstNotNullOfOrNull { it.nutrientValues?.per100Unit } ?: "g"
+        SectionHeader(stringResource(R.string.nutrition_per_100, unit))
+        TableGroup {
+            NutrientKind.entries.forEachIndexed { row, kind ->
+                val nutrients = products.map { it.nutrientValues?.nutrients.orEmpty().find(kind) }
+                val best = kind.lowerIsBetter?.let { lower ->
+                    bestIndex(nutrients.map { parseNutrientNumber(it?.details?.value) }, lower)
+                }
+                TableRow(stringResource(kind.label), products, hScroll, row, NutrientKind.entries.size) { i, _ ->
+                    ValueCell(nutrients[i]?.displayValue(), best == i)
+                }
+            }
+        }
+
+        SectionHeader(stringResource(R.string.comparison_section_ingredients))
+        TableGroup {
+            val levels = listOf(5, 4, 3, 2, 1)
+            levels.forEachIndexed { row, level ->
+                val info = harmLevel(level)
+                val tone = info.toneOrNeutral()
+                TableRow(
+                    label = stringResource(info.groupLabel),
+                    products = products,
+                    hScroll = hScroll,
+                    index = row,
+                    count = levels.size,
+                    labelLeading = { Box(Modifier.size(10.dp).background(tone.container, CircleShape)) },
+                ) { _, product ->
+                    val names = product.ingredients.orEmpty()
+                        .filter { it.harmfulLevel == level }
+                        .map { it.displayName ?: it.name ?: "?" }
+                    if (names.isEmpty()) MissingCell(stringResource(R.string.comparison_none))
+                    else Text(
+                        names.joinToString(", "),
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+        }
+
+        SectionHeader(stringResource(R.string.section_ingredients))
+        TableGroup {
+            TableRow(stringResource(R.string.comparison_row_description), products, hScroll, 0, 1) { _, product ->
+                DescriptionCell(product, highlight)
+            }
+        }
     }
 }
 
-private fun translateComparisonIngredientColor(apiHex: String, isDark: Boolean): Pair<Color, Color> {
-    return when (apiHex.uppercase()) {
-        "#D9F6E4" -> if (isDark) ingredient_dark_green to ingredient_dark_onGreen else ingredient_light_green to ingredient_light_onGreen
-        "#EBF3CC" -> if (isDark) ingredient_dark_yellow to ingredient_dark_onYellow else ingredient_light_yellow to ingredient_light_onYellow
-        "#FEEDD9" -> if (isDark) ingredient_dark_orange to ingredient_dark_onOrange else ingredient_light_orange to ingredient_light_onOrange
-        "#FFF3C4" -> if (isDark) ingredient_dark_red to ingredient_dark_onRed else ingredient_light_red to ingredient_light_onRed
-        else -> {
-            val bgColor = try {
-                Color(android.graphics.Color.parseColor(apiHex))
-            } catch (e: Exception) {
-                Color.Transparent
+/**
+ * The part of a row that scrolls sideways. Wherever more columns lie beyond an edge (under the sticky
+ * label column, or past the screen's right side) the cells fade out under a short gradient in
+ * [fadeColor] (the row's background) instead of being chopped off.
+ */
+@Composable
+private fun ScrollingCells(
+    hScroll: ScrollState,
+    fadeColor: Color,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val spec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+    val startFade by animateFloatAsState(if (hScroll.canScrollBackward) 1f else 0f, spec, label = "startFade")
+    val endFade by animateFloatAsState(if (hScroll.canScrollForward) 1f else 0f, spec, label = "endFade")
+    Row(
+        modifier
+            .horizontalScroll(hScroll)
+            .drawWithContent {
+                drawContent()
+                // Drawn inside the scrolled content, so the viewport starts at the scroll offset.
+                val width = ScrollFadeWidth.toPx()
+                val left = hScroll.value.toFloat()
+                val right = left + hScroll.viewportSize
+                val clear = fadeColor.copy(alpha = 0f)
+                if (startFade > 0f) drawRect(
+                    brush = Brush.horizontalGradient(0f to fadeColor, 1f to clear, startX = left, endX = left + width),
+                    topLeft = Offset(left, 0f),
+                    size = Size(width, size.height),
+                    alpha = startFade,
+                )
+                if (endFade > 0f) drawRect(
+                    brush = Brush.horizontalGradient(0f to clear, 1f to fadeColor, startX = right - width, endX = right),
+                    topLeft = Offset(right - width, 0f),
+                    size = Size(width, size.height),
+                    alpha = endFade,
+                )
+            },
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+    ) {
+        content()
+    }
+}
+
+/** A compact product card heading its column: photo with the score on it, name, and a small remove button. */
+@Composable
+private fun ProductHeaderCard(
+    product: ProductResponse,
+    onProductClicked: (String) -> Unit,
+    onRemoveProduct: (String) -> Unit,
+) {
+    val haptics = rememberHaptics()
+    val interaction = remember { MutableInteractionSource() }
+    val ean = product.ean
+    Surface(
+        onClick = { ean?.let(onProductClicked) },
+        enabled = ean != null,
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        interactionSource = interaction,
+        modifier = Modifier.width(ColumnWidth).pressScale(interaction),
+    ) {
+        Column(
+            Modifier.padding(Spacing.s),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+        ) {
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                ProductImage(
+                    url = product.image?.url,
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.size(64.dp),
+                )
+                ScoreBadge(
+                    product.score,
+                    size = 30.dp,
+                    modifier = Modifier.align(Alignment.BottomStart),
+                )
+                if (ean != null) {
+                    FilledTonalIconButton(
+                        onClick = {
+                            haptics.toggle(false)
+                            onRemoveProduct(ean)
+                        },
+                        shapes = IconButtonDefaults.shapes(),
+                        modifier = Modifier.align(Alignment.TopEnd).size(28.dp),
+                    ) {
+                        AppIcon(
+                            AppSymbols.Close,
+                            contentDescription = stringResource(R.string.comparison_remove),
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                }
             }
-            if (isDark) {
-                bgColor.copy(alpha = 0.3f) to Color.White
-            } else {
-                bgColor.copy(alpha = 0.9f) to Color.Black
+            Text(
+                product.name ?: stringResource(R.string.product_unknown),
+                style = MaterialTheme.typography.labelMedium,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                minLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun TableGroup(content: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(SegmentedShapes.gap)) { content() }
+}
+
+/** One row: a sticky label tile on the left, then one cell per product scrolling with [hScroll]. */
+@Composable
+private fun TableRow(
+    label: String,
+    products: List<ProductResponse>,
+    hScroll: ScrollState,
+    index: Int,
+    count: Int,
+    labelLeading: (@Composable () -> Unit)? = null,
+    cell: @Composable (Int, ProductResponse) -> Unit,
+) {
+    Surface(
+        shape = segmentedItemShape(index, count),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(Modifier.height(IntrinsicSize.Min)) {
+            Row(
+                Modifier
+                    .width(LabelWidth)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .padding(horizontal = Spacing.m, vertical = Spacing.s),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+            ) {
+                labelLeading?.invoke()
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            ScrollingCells(hScroll, fadeColor = MaterialTheme.colorScheme.surfaceContainer, Modifier.fillMaxHeight()) {
+                products.forEachIndexed { i, product ->
+                    Box(
+                        Modifier.width(ColumnWidth).fillMaxHeight().padding(vertical = Spacing.s, horizontal = Spacing.xs),
+                        contentAlignment = Alignment.Center,
+                    ) { cell(i, product) }
+                }
             }
         }
     }
+}
+
+/** A value; the best one in its row sits on a highlighted pill with a trophy. */
+@Composable
+private fun ValueCell(value: String?, best: Boolean) {
+    if (value == null) {
+        MissingCell(stringResource(R.string.value_missing_short))
+        return
+    }
+    if (!best) {
+        Text(value, style = MaterialTheme.typography.bodyMedium.tabular())
+        return
+    }
+    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
+        Row(
+            Modifier.padding(horizontal = Spacing.s, vertical = Spacing.xxs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AppIcon(
+                AppSymbols.EmojiEvents,
+                contentDescription = stringResource(R.string.cd_best_value),
+                filled = true,
+                modifier = Modifier.size(14.dp),
+            )
+            Text(
+                value,
+                style = MaterialTheme.typography.labelLargeEmphasized.tabular(),
+                modifier = Modifier.padding(start = Spacing.xs),
+            )
+        }
+    }
+}
+
+@Composable
+private fun MissingCell(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+    )
+}
+
+@Composable
+private fun DescriptionCell(product: ProductResponse, highlight: Boolean) {
+    val description = product.description
+    if (description.isNullOrBlank()) {
+        MissingCell(stringResource(R.string.value_missing))
+        return
+    }
+    val phrases = product.ingredientPhrases.orEmpty()
+    val tones = phrases.map { phraseTone(it.backgroundColor) }
+    val text = buildAnnotatedString {
+        append(description)
+        if (highlight) phrases.forEachIndexed { i, info ->
+            val phrase = info.phrase?.takeIf { it.isNotBlank() } ?: return@forEachIndexed
+            var start = description.indexOf(phrase, ignoreCase = true)
+            while (start != -1) {
+                addStyle(SpanStyle(background = tones[i].container, color = tones[i].content), start, start + phrase.length)
+                start = description.indexOf(phrase, start + phrase.length, ignoreCase = true)
+            }
+        }
+    }
+    Text(text, style = MaterialTheme.typography.bodySmall)
+}
+
+/** Index of the single best value, or null when fewer than two products have one or they tie. */
+private fun bestIndex(values: List<Double?>, lowerIsBetter: Boolean): Int? {
+    val known = values.withIndex().filter { it.value != null }
+    if (known.size < 2) return null
+    val target = if (lowerIsBetter) known.minOf { it.value!! } else known.maxOf { it.value!! }
+    return known.filter { it.value == target }.singleOrNull()?.index
 }

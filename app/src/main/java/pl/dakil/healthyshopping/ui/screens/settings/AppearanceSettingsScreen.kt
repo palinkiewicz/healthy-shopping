@@ -1,144 +1,153 @@
 package pl.dakil.healthyshopping.ui.screens.settings
 
 import android.os.Build
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.graphics.shapes.Morph
+import pl.dakil.healthyshopping.R
 import pl.dakil.healthyshopping.data.repository.AppColorTheme
 import pl.dakil.healthyshopping.data.repository.DarkThemeOption
-import pl.dakil.healthyshopping.ui.components.flatTopAppBarColors
+import pl.dakil.healthyshopping.data.repository.ProgressStyle
+import pl.dakil.healthyshopping.ui.components.label
+import pl.dakil.healthyshopping.ui.designsystem.ConnectedToggleRow
+import pl.dakil.healthyshopping.ui.designsystem.MorphShape
+import pl.dakil.healthyshopping.ui.designsystem.SegmentedGroup
+import pl.dakil.healthyshopping.ui.designsystem.ToggleOption
+import pl.dakil.healthyshopping.ui.designsystem.bleedHorizontally
+import pl.dakil.healthyshopping.ui.designsystem.decorativeMotion
+import pl.dakil.healthyshopping.ui.designsystem.decorativeSpec
+import pl.dakil.healthyshopping.ui.designsystem.icon.AppIcon
+import pl.dakil.healthyshopping.ui.designsystem.icon.AppSymbols
+import pl.dakil.healthyshopping.ui.designsystem.pressScale
+import pl.dakil.healthyshopping.ui.designsystem.rememberHaptics
+import pl.dakil.healthyshopping.ui.theme.LocalDarkTheme
+import pl.dakil.healthyshopping.ui.theme.Spacing
 import pl.dakil.healthyshopping.ui.theme.colorSchemeFor
 import pl.dakil.healthyshopping.ui.viewmodel.SettingsViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppearanceSettingsScreen(
     viewModel: SettingsViewModel,
-    onBackClick: () -> Unit,
-    bottomPadding: Dp = 0.dp
+    onNavigateBack: () -> Unit,
 ) {
     val colorTheme by viewModel.colorTheme.collectAsState()
     val darkThemeOption by viewModel.darkThemeOption.collectAsState()
     val pureBlack by viewModel.pureBlack.collectAsState()
+    val hapticsEnabled by viewModel.hapticsEnabled.collectAsState()
+    val animatedNumbers by viewModel.animatedNumbers.collectAsState()
+    val decorativeAnimations by viewModel.decorativeAnimations.collectAsState()
+    val progressStyle by viewModel.progressStyle.collectAsState()
+    val haptics = rememberHaptics()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Wygląd") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Wstecz")
-                    }
-                },
-                colors = flatTopAppBarColors()
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
+    SettingsSubscreen(stringResource(R.string.settings_appearance), onNavigateBack) {
+        SectionHeader(stringResource(R.string.settings_theme_colors))
+
+        val availableThemes = AppColorTheme.entries.filter {
+            it != AppColorTheme.DYNAMIC || Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+        }
+        // Bleeds into the page gutters so swatches scroll edge to edge.
+        LazyRow(
+            modifier = Modifier.bleedHorizontally(Spacing.gutter),
+            contentPadding = PaddingValues(horizontal = Spacing.gutter, vertical = Spacing.s),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
-            SectionHeader("Kolory motywu")
-
-            val availableThemes = AppColorTheme.entries.filter {
-                it != AppColorTheme.DYNAMIC || Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-            }
-
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(availableThemes.size) { index ->
-                    val theme = availableThemes[index]
-                    ThemeColorSwatch(
-                        theme = theme,
-                        isSelected = theme == colorTheme,
-                        onClick = { viewModel.setColorTheme(theme) }
-                    )
-                }
-            }
-
-            SectionHeader("Tryb ciemny")
-
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                DarkThemeOption.entries.forEachIndexed { index, option ->
-                    SegmentedButton(
-                        selected = option == darkThemeOption,
-                        onClick = { viewModel.setDarkThemeOption(option) },
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = DarkThemeOption.entries.size
-                        )
-                    ) {
-                        Text(getDarkThemeOptionDisplayName(option))
+            items(availableThemes) { theme ->
+                ThemeColorSwatch(
+                    theme = theme,
+                    isSelected = theme == colorTheme,
+                    onClick = {
+                        if (theme != colorTheme) haptics.tick()
+                        viewModel.setColorTheme(theme)
                     }
-                }
+                )
             }
+        }
 
+        SectionHeader(stringResource(R.string.settings_dark_mode))
+        ConnectedToggleRow(
+            options = listOf(
+                ToggleOption(DarkThemeOption.FOLLOW_SYSTEM, DarkThemeOption.FOLLOW_SYSTEM.label(), AppSymbols.Contrast),
+                ToggleOption(DarkThemeOption.LIGHT, DarkThemeOption.LIGHT.label(), AppSymbols.LightMode),
+                ToggleOption(DarkThemeOption.DARK, DarkThemeOption.DARK.label(), AppSymbols.DarkMode),
+            ),
+            selected = darkThemeOption,
+            onSelect = { viewModel.setDarkThemeOption(it) },
+            modifier = Modifier.padding(bottom = Spacing.s),
+        )
+        SegmentedGroup {
             SwitchRow(
-                title = "Czysta czerń",
-                summary = "Całkowicie czarne tło w trybie ciemnym, oszczędza baterię na ekranach OLED",
+                title = stringResource(R.string.settings_pure_black),
+                summary = stringResource(R.string.settings_pure_black_description),
                 checked = pureBlack,
                 onCheckedChange = { viewModel.setPureBlack(it) },
                 enabled = darkThemeOption != DarkThemeOption.LIGHT
             )
+        }
 
-            Spacer(modifier = Modifier.height(bottomPadding))
+        SectionHeader(stringResource(R.string.settings_feel))
+        SegmentedGroup {
+            SwitchRow(
+                title = stringResource(R.string.settings_haptics),
+                summary = stringResource(R.string.settings_haptics_description),
+                checked = hapticsEnabled,
+                onCheckedChange = { viewModel.setHapticsEnabled(it) }
+            )
+            SwitchRow(
+                title = stringResource(R.string.settings_animated_numbers),
+                summary = stringResource(R.string.settings_animated_numbers_description),
+                checked = animatedNumbers,
+                onCheckedChange = { viewModel.setAnimatedNumbers(it) }
+            )
+            SwitchRow(
+                title = stringResource(R.string.settings_decorative_animations),
+                summary = stringResource(R.string.settings_decorative_animations_description),
+                checked = decorativeAnimations,
+                onCheckedChange = { viewModel.setDecorativeAnimations(it) }
+            )
+            SelectRow(
+                title = stringResource(R.string.settings_progress_style),
+                summary = stringResource(R.string.settings_progress_style_description),
+                selectedLabel = progressStyle.label(),
+                options = ProgressStyle.entries.map { it to it.label() },
+                onSelect = { viewModel.setProgressStyle(it) }
+            )
         }
     }
 }
 
 /**
- * A circular color swatch in the style of Android 16's built-in theme
- * selector: top half shows the theme's primary color, the bottom quadrants
- * its secondary and tertiary containers. The selected swatch gets a ring
- * and a check mark.
+ * A color swatch in the style of Android 16's theme picker: the top half shows the theme's
+ * primary color, the bottom quadrants its secondary and tertiary containers. Selecting one morphs
+ * it from a circle into a cookie and gives it a little spin.
  */
 @Composable
 private fun ThemeColorSwatch(
@@ -146,26 +155,35 @@ private fun ThemeColorSwatch(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
-    val scheme = colorSchemeFor(colorTheme = theme, darkTheme = isDark)
+    val scheme = colorSchemeFor(colorTheme = theme, darkTheme = LocalDarkTheme.current)
+    val morph = remember { Morph(MaterialShapes.Circle, MaterialShapes.Cookie9Sided) }
+    val progress by animateFloatAsState(
+        targetValue = if (isSelected) 1f else 0f,
+        animationSpec = decorativeSpec(MaterialTheme.motionScheme.defaultSpatialSpec()),
+        label = "swatchMorph",
+    )
+    val interactionSource = remember { MutableInteractionSource() }
+    // The spin is decoration; without it the selected swatch still shows as a cookie.
+    val spin = if (decorativeMotion) SWATCH_SPIN else 0f
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(76.dp)
+        modifier = Modifier
+            .width(80.dp)
+            .semantics { selected = isSelected }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                role = Role.RadioButton,
+                onClick = onClick,
+            )
     ) {
         Box(
             modifier = Modifier
                 .size(72.dp)
-                .then(
-                    if (isSelected) Modifier.border(
-                        width = 3.dp,
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = CircleShape
-                    ) else Modifier
-                )
-                .padding(if (isSelected) 6.dp else 0.dp)
-                .clip(CircleShape)
-                .clickable { onClick() },
+                .pressScale(interactionSource, pressedScale = 0.9f)
+                .graphicsLayer { rotationZ = progress * spin }
+                .clip(MorphShape(morph, progress)),
             contentAlignment = Alignment.Center
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
@@ -173,25 +191,32 @@ private fun ThemeColorSwatch(
                 drawArc(scheme.secondaryContainer, startAngle = 90f, sweepAngle = 90f, useCenter = true)
                 drawArc(scheme.tertiaryContainer, startAngle = 0f, sweepAngle = 90f, useCenter = true)
             }
-            if (isSelected) {
-                Icon(
-                    imageVector = Icons.Rounded.Check,
-                    contentDescription = null,
-                    tint = scheme.onPrimary,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 8.dp)
-                        .size(20.dp)
-                )
-            }
+            AppIcon(
+                AppSymbols.Check,
+                contentDescription = null,
+                tint = scheme.onPrimary,
+                filled = true,
+                modifier = Modifier
+                    .graphicsLayer {
+                        // Counter-rotate so the check stays upright while the cookie spins.
+                        rotationZ = -progress * spin
+                        scaleX = progress
+                        scaleY = progress
+                        alpha = progress.coerceIn(0f, 1f)
+                    }
+                    .size(28.dp)
+            )
         }
-        Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = getColorThemeDisplayName(theme),
-            style = MaterialTheme.typography.labelMedium,
+            text = theme.label(),
+            style = if (isSelected) MaterialTheme.typography.labelMediumEmphasized else MaterialTheme.typography.labelMedium,
             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            maxLines = 2
+            maxLines = 2,
+            modifier = Modifier.padding(top = Spacing.s),
         )
     }
 }
+
+
+private const val SWATCH_SPIN = 40f

@@ -15,6 +15,7 @@ import pl.dakil.healthyshopping.data.repository.ProductRepository
 import pl.dakil.healthyshopping.data.repository.SettingsRepository
 import pl.dakil.healthyshopping.ui.navigation.AppNavigation
 import pl.dakil.healthyshopping.ui.theme.HealthyShoppingTheme
+import pl.dakil.healthyshopping.ui.theme.MotionPreferences
 import pl.dakil.healthyshopping.ui.viewmodel.MainViewModel
 import pl.dakil.healthyshopping.ui.viewmodel.SearchViewModel
 import pl.dakil.healthyshopping.ui.viewmodel.SettingsViewModel
@@ -69,11 +70,17 @@ class MainActivity : ComponentActivity() {
             val colorTheme by settingsViewModel.colorTheme.collectAsState()
             val darkThemeOption by settingsViewModel.darkThemeOption.collectAsState()
             val pureBlack by settingsViewModel.pureBlack.collectAsState()
+            val hapticsEnabled by settingsViewModel.hapticsEnabled.collectAsState()
+            val animatedNumbers by settingsViewModel.animatedNumbers.collectAsState()
+            val decorative by settingsViewModel.decorativeAnimations.collectAsState()
+            val progressStyle by settingsViewModel.progressStyle.collectAsState()
 
             HealthyShoppingTheme(
                 colorTheme = colorTheme,
                 darkThemeOption = darkThemeOption,
-                pureBlack = pureBlack
+                pureBlack = pureBlack,
+                hapticsEnabled = hapticsEnabled,
+                motion = MotionPreferences(animatedNumbers, decorative, progressStyle),
             ) {
                 AppNavigation(
                     viewModel = viewModel,

@@ -1,68 +1,115 @@
 package pl.dakil.healthyshopping.ui.screens
 
-import kotlinx.coroutines.launch
-
+import android.content.ClipData
+import android.content.Intent
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import android.content.Intent
-import android.content.ClipData
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.AddChart
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material3.*
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.MaterialShapes
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.runtime.*
+import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.platform.ClipEntry
-import coil.compose.AsyncImage
-import pl.dakil.healthyshopping.ui.components.flatTopAppBarColors
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
+import pl.dakil.healthyshopping.R
 import pl.dakil.healthyshopping.data.model.Ingredient
 import pl.dakil.healthyshopping.data.model.IngredientResponse
-import pl.dakil.healthyshopping.data.model.Nutrient
 import pl.dakil.healthyshopping.data.model.ProductResponse
-import pl.dakil.healthyshopping.ui.viewmodel.ProductUiState
+import pl.dakil.healthyshopping.data.repository.DetailsSection
+import pl.dakil.healthyshopping.ui.components.ErrorState
+import pl.dakil.healthyshopping.ui.components.GrowingBar
+import pl.dakil.healthyshopping.ui.components.ProductImage
+import pl.dakil.healthyshopping.ui.components.ScoreBadge
+import pl.dakil.healthyshopping.ui.components.dailyShare
+import pl.dakil.healthyshopping.ui.components.detailsSectionFor
+import pl.dakil.healthyshopping.ui.components.displayValue
+import pl.dakil.healthyshopping.ui.components.formatNutritionForCopy
+import pl.dakil.healthyshopping.ui.components.harmLevel
+import pl.dakil.healthyshopping.ui.components.labelRes
+import pl.dakil.healthyshopping.ui.components.nutrientKindOf
+import pl.dakil.healthyshopping.ui.components.parseNutrientNumber
+import pl.dakil.healthyshopping.ui.components.symbol
+import pl.dakil.healthyshopping.ui.components.tagInfo
+import pl.dakil.healthyshopping.ui.components.toneOrNeutral
+import pl.dakil.healthyshopping.ui.designsystem.BackButton
+import pl.dakil.healthyshopping.ui.designsystem.CollapsingScaffold
+import pl.dakil.healthyshopping.ui.designsystem.CountUpText
+import pl.dakil.healthyshopping.ui.designsystem.ShapedIcon
+import pl.dakil.healthyshopping.ui.designsystem.entrance
+import pl.dakil.healthyshopping.ui.designsystem.icon.AppIcon
+import pl.dakil.healthyshopping.ui.designsystem.icon.AppSymbol
+import pl.dakil.healthyshopping.ui.designsystem.icon.AppSymbols
+import pl.dakil.healthyshopping.ui.designsystem.rememberHaptics
+import pl.dakil.healthyshopping.ui.designsystem.segmentedItemColors
+import pl.dakil.healthyshopping.ui.theme.HealthTone
+import pl.dakil.healthyshopping.ui.theme.Spacing
+import pl.dakil.healthyshopping.ui.theme.accent
+import pl.dakil.healthyshopping.ui.theme.parseHexColor
+import pl.dakil.healthyshopping.ui.theme.phraseTone
+import pl.dakil.healthyshopping.ui.theme.tabular
+import pl.dakil.healthyshopping.ui.theme.tone
 import pl.dakil.healthyshopping.ui.viewmodel.IngredientUiState
-import pl.dakil.healthyshopping.ui.theme.*
+import pl.dakil.healthyshopping.ui.viewmodel.ProductUiState
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** What the details page shows, as chosen in the product-details settings. */
+data class DetailsDisplay(
+    val groupedIngredients: Boolean,
+    val nutritionBars: Boolean,
+    val highlightedIngredients: Boolean,
+    val productTags: Boolean,
+    val sectionOrder: List<String>,
+    val hiddenSections: Set<String>,
+)
+
 @Composable
 fun DetailsScreen(
     uiState: ProductUiState,
-    showGroupedIngredients: Boolean,
-    showNutritionProgressBars: Boolean,
-    showHighlightedIngredients: Boolean,
-    detailsSectionOrder: List<String>,
-    hiddenDetailsSections: Set<String>,
+    display: DetailsDisplay,
     isProductInComparison: Boolean,
     ingredientUiState: IngredientUiState,
     onToggleComparison: () -> Unit,
@@ -70,928 +117,708 @@ fun DetailsScreen(
     onRetry: () -> Unit,
     onImageClicked: (String) -> Unit,
     onIngredientClicked: (Int) -> Unit,
-    onDismissIngredientDetails: () -> Unit
+    onDismissIngredientDetails: () -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-    var showSheet by remember { mutableStateOf(false) }
+    val haptics = rememberHaptics()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val addedMessage = stringResource(R.string.comparison_added)
+    val removedMessage = stringResource(R.string.comparison_removed)
+    val copiedMessage = stringResource(R.string.copied)
+    val product = (uiState as? ProductUiState.Success)?.product
 
-    LaunchedEffect(ingredientUiState) {
-        if (ingredientUiState is IngredientUiState.Success || ingredientUiState is IngredientUiState.Loading || ingredientUiState is IngredientUiState.Error) {
-            showSheet = true
-        }
-    }
-
-    if (showSheet) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                showSheet = false
-                onDismissIngredientDetails()
-            },
-            sheetState = sheetState,
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        ) {
-            IngredientDetailsBottomSheet(uiState = ingredientUiState)
-        }
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Analiza produktu") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClicked) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Wróć"
-                        )
-                    }
-                },
-                actions = {
-                    val context = LocalContext.current
-                    if (uiState is ProductUiState.Success) {
-                        val product = uiState.product
-                        
-                        IconButton(onClick = onToggleComparison) {
-                            Icon(
-                                imageVector = if (isProductInComparison) Icons.Default.CheckCircle else Icons.Default.AddChart,
-                                contentDescription = if (isProductInComparison) "Usuń z porównania" else "Dodaj do porównania",
-                                tint = if (isProductInComparison) MaterialTheme.colorScheme.primary else LocalContentColor.current
-                            )
+    CollapsingScaffold(
+        title = stringResource(R.string.details_title),
+        navigationIcon = { BackButton(onBackClicked) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        actions = {
+            if (product != null) {
+                IconToggleButton(
+                    checked = isProductInComparison,
+                    onCheckedChange = { checked ->
+                        haptics.toggle(checked)
+                        onToggleComparison()
+                        scope.launch {
+                            snackbarHostState.currentSnackbarData?.dismiss()
+                            snackbarHostState.showSnackbar(if (checked) addedMessage else removedMessage)
                         }
-
-                        val shareText = product.share?.shareText
-                        if (shareText != null) {
-                            IconButton(onClick = {
-                                val sendIntent: Intent = Intent().apply {
-                                    action = Intent.ACTION_SEND
-                                    putExtra(Intent.EXTRA_TEXT, shareText)
-                                    type = "text/plain"
-                                }
-                                val shareIntent = Intent.createChooser(sendIntent, null)
-                                context.startActivity(shareIntent)
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Default.Share,
-                                    contentDescription = "Udostępnij"
-                                )
-                            }
-                        }
-                    }
-                },
-                colors = flatTopAppBarColors()
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentAlignment = Alignment.Center
-        ) {
-            when (uiState) {
-                is ProductUiState.Idle -> {}
-                is ProductUiState.Loading -> {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                }
-                is ProductUiState.Success -> {
-                    ProductDetailsContent(
-                        product = uiState.product,
-                        showGroupedIngredients = showGroupedIngredients,
-                        showNutritionProgressBars = showNutritionProgressBars,
-                        showHighlightedIngredients = showHighlightedIngredients,
-                        detailsSectionOrder = detailsSectionOrder,
-                        hiddenDetailsSections = hiddenDetailsSections,
-                        onImageClicked = onImageClicked,
-                        onIngredientClicked = onIngredientClicked
+                    },
+                    shapes = IconButtonDefaults.toggleableShapes(),
+                    colors = IconButtonDefaults.iconToggleButtonColors(
+                        checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
+                ) {
+                    AppIcon(
+                        if (isProductInComparison) AppSymbols.CheckCircle else AppSymbols.AddChart,
+                        contentDescription = stringResource(
+                            if (isProductInComparison) R.string.comparison_remove else R.string.comparison_add
+                        ),
+                        filled = isProductInComparison,
                     )
                 }
-                is ProductUiState.Error -> {
-                    pl.dakil.healthyshopping.ui.components.StandardError(
-                        errorType = uiState.errorType,
-                        customMessage = uiState.message,
-                        onRetry = onRetry
+                val shareText = product.share?.shareText
+                if (shareText != null) {
+                    val chooserTitle = stringResource(R.string.action_share)
+                    IconButton(
+                        onClick = {
+                            val send = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, shareText)
+                            }
+                            context.startActivity(Intent.createChooser(send, chooserTitle))
+                        },
+                        shapes = IconButtonDefaults.shapes(),
+                    ) { AppIcon(AppSymbols.Share, contentDescription = chooserTitle) }
+                }
+            }
+        },
+    ) { padding ->
+        val fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+        val fadeOutSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+        AnimatedContent(
+            targetState = uiState,
+            contentKey = { it::class },
+            transitionSpec = { fadeIn(fadeInSpec) togetherWith fadeOut(fadeOutSpec) },
+            modifier = Modifier.fillMaxSize().padding(padding),
+            label = "details",
+        ) { state ->
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                when (state) {
+                    is ProductUiState.Idle -> Unit
+                    is ProductUiState.Loading -> LoadingIndicator(Modifier.size(72.dp))
+                    is ProductUiState.Error -> Column(
+                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.Center,
+                    ) { ErrorState(state.errorType, onRetry = onRetry) }
+                    is ProductUiState.Success -> ProductContent(
+                        product = state.product,
+                        display = display,
+                        onImageClicked = onImageClicked,
+                        onIngredientClicked = onIngredientClicked,
+                        onCopied = {
+                            haptics.confirm()
+                            scope.launch { snackbarHostState.showSnackbar(copiedMessage) }
+                        },
                     )
                 }
             }
         }
     }
+
+    if (ingredientUiState !is IngredientUiState.Idle) {
+        IngredientSheet(ingredientUiState, onDismiss = onDismissIngredientDetails)
+    }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ProductDetailsContent(
+private fun ProductContent(
     product: ProductResponse,
-    showGroupedIngredients: Boolean,
-    showNutritionProgressBars: Boolean,
-    showHighlightedIngredients: Boolean,
-    detailsSectionOrder: List<String>,
-    hiddenDetailsSections: Set<String>,
+    display: DetailsDisplay,
     onImageClicked: (String) -> Unit,
-    onIngredientClicked: (Int) -> Unit
+    onIngredientClicked: (Int) -> Unit,
+    onCopied: () -> Unit,
 ) {
     val clipboard = LocalClipboard.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
+    fun copy(label: String, text: String) {
+        scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(label, text))) }
+        onCopied()
+    }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        horizontalAlignment = Alignment.Start
+    val sections = display.sectionOrder
+        .filter { it !in display.hiddenSections }
+        .mapNotNull(::detailsSectionFor)
+    val scoreHidden = DetailsSection.SCORE_CARD !in sections
+
+    LazyColumn(
+        modifier = Modifier.widthIn(max = Spacing.maxContentWidth).fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = Spacing.gutter, end = Spacing.gutter, top = Spacing.s, bottom = Spacing.xxl,
+        ),
+        verticalArrangement = Arrangement.spacedBy(Spacing.l),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Unverified Alert Banner (Always first if exists)
         product.unverifiedCell?.let { unverified ->
-            val isDarkTheme = isSystemInDarkTheme()
-            val parsedColor = try {
-                Color(android.graphics.Color.parseColor(unverified.color ?: "#FCF2E3"))
-            } catch (e: Exception) {
-                null
-            }
-            val bgColor = if (isDarkTheme) {
-                MaterialTheme.colorScheme.errorContainer
-            } else {
-                parsedColor ?: MaterialTheme.colorScheme.surfaceVariant
-            }
-            val textColor = if (isDarkTheme) MaterialTheme.colorScheme.onErrorContainer else Color.Black.copy(alpha = 0.8f)
-            val descColor = if (isDarkTheme) MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.7f)
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                colors = CardDefaults.cardColors(containerColor = bgColor)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        tint = textColor
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text(
-                            text = unverified.title ?: "Produkt dodany automatycznie",
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = textColor
-                        )
-                        unverified.description?.let { desc ->
-                            Text(
-                                text = desc,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = descColor,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
-                    }
-                }
+            item(key = "unverified") {
+                UnverifiedBanner(unverified.title, unverified.description, Modifier.entrance(0))
             }
         }
-
-        // Product Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            product.image?.url?.let { url ->
-                AsyncImage(
-                    model = url,
-                    contentDescription = "Zdjęcie produktu",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable { onImageClicked(url) }
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = product.name ?: "Nieznany produkt",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    
-                    product.category?.name?.let { catName ->
-                        Text(
-                            text = catName,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
-
-                // Compact Score Box (Shown if SCORE_CARD is hidden)
-                if ("score_card" in hiddenDetailsSections) {
-                    val scoreColor = try {
-                        Color(android.graphics.Color.parseColor(product.score?.color ?: "#CCCCCC"))
-                    } catch (e: Exception) {
-                        MaterialTheme.colorScheme.primary
-                    }
-                    
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 8.dp)
-                            .size(44.dp)
-                            .background(scoreColor, shape = CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "${product.score?.value ?: "?"}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Dynamic Sections
-        detailsSectionOrder.forEach { sectionId ->
-            if (sectionId in hiddenDetailsSections) return@forEach
-
-            when (sectionId) {
-                "score_card" -> {
-                    // Health Score Card
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(
-                                    text = "Wynik Zdrowotny",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = product.score?.label ?: "Brak danych",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                                )
-                            }
-                            
-                            val scoreColor = try {
-                                Color(android.graphics.Color.parseColor(product.score?.color ?: "#CCCCCC"))
-                            } catch (e: Exception) {
-                                MaterialTheme.colorScheme.primary
-                            }
-                            
-                            Box(
-                                modifier = Modifier
-                                    .size(60.dp)
-                                    .background(scoreColor, shape = CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "${product.score?.value ?: "?"}",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                "product_tags" -> {
-                    // Tags
-                    product.tags?.let { tags ->
-                        if (tags.isNotEmpty()) {
-                            val isDarkTheme = isSystemInDarkTheme()
-                            val tagGreenBg = if (isDarkTheme) Color(0xFF2E5E3E) else Color(0xFFD9F6E4)
-                            val tagRedBg = if (isDarkTheme) Color(0xFF5A0000) else Color(0xFFFF8A8A)
-                            val tagGreenText = if (isDarkTheme) Color.White else Color.Black.copy(alpha = 0.8f)
-                            val tagRedText = if (isDarkTheme) Color.White else Color.Black.copy(alpha = 0.8f)
-                            val tagNeutralBg = MaterialTheme.colorScheme.surfaceVariant
-                            val tagNeutralText = MaterialTheme.colorScheme.onSurfaceVariant
-                            
-                            FlowRow(
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                tags.forEach { tag ->
-                                    val (tagName, chipBg, chipText) = when (tag) {
-                                        "no_sugar_added" -> Triple("Brak dodanego cukru", tagGreenBg, tagGreenText)
-                                        "high_fiber" -> Triple("Wysoka zawartość błonnika", tagGreenBg, tagGreenText)
-                                        "high_protein" -> Triple("Wysoka zawartość białka", tagGreenBg, tagGreenText)
-                                        "not_recommended_for_overweight_people" -> Triple("Szkodliwe dla osób z nadwagą", tagRedBg, tagRedText)
-                                        "not_recommended_for_people_with_high_cholesterol" -> Triple("Szkodliwe dla osób z wysokim cholesterolem", tagRedBg, tagRedText)
-                                        "not_recommended_for_people_with_diabetes" -> Triple("Szkodliwe dla cukrzyków", tagRedBg, tagRedText)
-                                        "not_recommended_for_people_with_hypertension" -> Triple("Szkodliwe dla osób z nadciśnieniem", tagRedBg, tagRedText)
-                                        else -> Triple(tag, tagNeutralBg, tagNeutralText)
-                                    }
-
-                                    AssistChip(
-                                        onClick = { },
-                                        label = { Text(tagName, color = chipText) },
-                                        colors = AssistChipDefaults.assistChipColors(
-                                            containerColor = chipBg,
-                                            labelColor = chipText
-                                        ),
-                                        border = null,
-                                        shape = RoundedCornerShape(16.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                "nutrition_table" -> {
-                    // Macronutrients
-                    product.nutrientValues?.nutrients?.let { nutrients ->
-                        if (nutrients.isNotEmpty()) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Wartości odżywcze na 100${product.nutrientValues.per100Unit ?: "g"}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                IconButton(
-                                    onClick = {
-                                        val textToCopy = formatNutritionalValuesForCopy(product)
-                                        scope.launch {
-                                            clipboard?.setClipEntry(ClipEntry(ClipData.newPlainText("Nutritional Values", textToCopy)))
-                                        }
-                                    },
-                                    modifier = Modifier.size(24.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ContentCopy,
-                                        contentDescription = "Kopiuj wartości odżywcze",
-                                        modifier = Modifier.size(18.dp),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
-
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                            ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    nutrients.forEach { nut ->
-                                        val nutName = nut.name ?: "Nieznane"
-                                        val valStr = nut.details?.value ?: "0"
-                                        val numVal = valStr.replace(Regex("[^0-9.,]"), "").replace(",", ".").toDoubleOrNull() ?: 0.0
-                                        
-                                        // Calculate RWS percentage and color
-                                        val (rwsPercent, barColor) = calculateRws(nutName, numVal)
-
-                                        Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween
-                                            ) {
-                                                Text(
-                                                    text = nutName,
-                                                    style = MaterialTheme.typography.bodyMedium
-                                                )
-                                                Text(
-                                                    text = if (nut.details?.value.isNullOrBlank()) "-" else "${nut.details?.value} ${nut.details?.unit ?: ""}",
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                            }
-                                            
-                                            if (showNutritionProgressBars) {
-                                                Spacer(modifier = Modifier.height(6.dp))
-                                                
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    LinearProgressIndicator(
-                                                        progress = { rwsPercent },
-                                                        modifier = Modifier
-                                                            .weight(1f)
-                                                            .height(6.dp)
-                                                            .clip(RoundedCornerShape(3.dp)),
-                                                        color = barColor,
-                                                        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
-                                                        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-                                                    )
-                                                    Spacer(modifier = Modifier.width(8.dp))
-                                                    Text(
-                                                        text = "${(rwsPercent * 100).toInt()}%",
-                                                        style = MaterialTheme.typography.labelSmall,
-                                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                                        modifier = Modifier.width(32.dp),
-                                                        textAlign = TextAlign.End
-                                                    )
-                                                }
-                                            }
-                                        }
-                                        if (nut != nutrients.last()) {
-                                            HorizontalDivider(
-                                                modifier = Modifier.padding(vertical = 4.dp), 
-                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
-                    }
-                }
-
-                "ingredients_list" -> {
-                    // Ingredients List
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Lista Składników",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        IconButton(
-                            onClick = {
-                                val textToCopy = product.description ?: ""
-                                scope.launch {
-                                    clipboard?.setClipEntry(ClipEntry(ClipData.newPlainText("Ingredients", textToCopy)))
-                                }
-                            },
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ContentCopy,
-                                contentDescription = "Kopiuj skład",
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                    
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            if (product.description.isNullOrBlank()) {
-                                Text(
-                                    text = "Brak szczegółowego opisu składu.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                                )
-                            } else {
-                                if (showHighlightedIngredients && !product.ingredientPhrases.isNullOrEmpty()) {
-                                    val isDarkTheme = isSystemInDarkTheme()
-                                    
-                                    val annotatedText = buildAnnotatedString {
-                                        val desc = product.description
-                                        append(desc)
-                                        
-                                        product.ingredientPhrases.forEach { phraseInfo ->
-                                            val phrase = phraseInfo.phrase ?: return@forEach
-                                            val colorHex = phraseInfo.backgroundColor ?: ""
-                                            
-                                            val (bgColor, textColor) = translateIngredientColor(colorHex, isDarkTheme)
-                                            
-                                            var startIndex = desc.indexOf(phrase, ignoreCase = true)
-                                            while (startIndex >= 0) {
-                                                val endIndex = startIndex + phrase.length
-                                                addStyle(
-                                                    style = SpanStyle(background = bgColor, color = textColor),
-                                                    start = startIndex,
-                                                    end = endIndex
-                                                )
-                                                startIndex = desc.indexOf(phrase, startIndex + phrase.length, ignoreCase = true)
-                                            }
-                                        }
-                                    }
-                                    
-                                    Text(
-                                        text = annotatedText,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                } else {
-                                    Text(
-                                        text = product.description,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                "harmful_ingredients" -> {
-                    // All ingredients with harmful level
-                    product.ingredients?.let { ingredients ->
-                        if (ingredients.isNotEmpty()) {
-                            Text(
-                                text = "Szkodliwość składników",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-
-                            if (showGroupedIngredients) {
-                                val grouped = ingredients.groupBy { it.harmfulLevel ?: 0 }.toSortedMap(reverseOrder())
-                                grouped.forEach { (level, list) ->
-                                    val groupName = when(level) {
-                                        5 -> "Bardzo szkodliwe"
-                                        4 -> "Szkodliwe"
-                                        3 -> "Podejrzane"
-                                        2 -> "Neutralne"
-                                        1 -> "Korzystne"
-                                        else -> "Brak danych"
-                                    }
-                                    
-                                    val isDarkTheme = isSystemInDarkTheme()
-                                    val (headerBg, headerTextColor) = when (level) {
-                                        1 -> if (isDarkTheme) ingredient_dark_green to ingredient_dark_onGreen else ingredient_light_green to ingredient_light_onGreen
-                                        2 -> if (isDarkTheme) ingredient_dark_yellow to ingredient_dark_onYellow else ingredient_light_yellow to ingredient_light_onYellow
-                                        3 -> if (isDarkTheme) ingredient_dark_orange to ingredient_dark_onOrange else ingredient_light_orange to ingredient_light_onOrange
-                                        4, 5 -> if (isDarkTheme) ingredient_dark_red to ingredient_dark_onRed else ingredient_light_red to ingredient_light_onRed
-                                        else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
-                                    }
-
-                                    Card(
-                                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                                        shape = RoundedCornerShape(12.dp)
-                                    ) {
-                                        Column {
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .background(headerBg)
-                                                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.SpaceBetween
-                                            ) {
-                                                Text(
-                                                    text = groupName,
-                                                    style = MaterialTheme.typography.titleSmall,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = headerTextColor
-                                                )
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(24.dp)
-                                                        .background(Color.Black.copy(alpha = 0.2f), CircleShape),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Text(
-                                                        text = list.size.toString(),
-                                                        style = MaterialTheme.typography.labelSmall,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = headerTextColor
-                                                    )
-                                                }
-                                            }
-                                            Column(modifier = Modifier.padding(12.dp)) {
-                                                list.forEach { ing ->
-                                                     Text(
-                                                         text = "• ${ing.displayName ?: ing.name ?: "Nieznany"}",
-                                                         style = MaterialTheme.typography.bodyMedium,
-                                                         modifier = Modifier
-                                                             .fillMaxWidth()
-                                                             .clickable(enabled = ing.id != null) { 
-                                                                 ing.id?.let { onIngredientClicked(it) } 
-                                                             }
-                                                             .padding(vertical = 4.dp)
-                                                     )
-                                                }
-                                             }
-                                        }
-                                    }
-                                }
-                            } else {
-                                ingredients.forEach { ing ->
-                                    val level = ing.harmfulLevel ?: 0
-                                    val isDarkTheme = isSystemInDarkTheme()
-                                    val (badgeColor, badgeTextColor) = when (level) {
-                                        1 -> if (isDarkTheme) ingredient_dark_green to ingredient_dark_onGreen else ingredient_light_green to ingredient_light_onGreen
-                                        2 -> if (isDarkTheme) ingredient_dark_yellow to ingredient_dark_onYellow else ingredient_light_yellow to ingredient_light_onYellow
-                                        3 -> if (isDarkTheme) ingredient_dark_orange to ingredient_dark_onOrange else ingredient_light_orange to ingredient_light_onOrange
-                                        4, 5 -> if (isDarkTheme) ingredient_dark_red to ingredient_dark_onRed else ingredient_light_red to ingredient_light_onRed
-                                        else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
-                                    }
-                                    
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 4.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .clickable(enabled = ing.id != null) { 
-                                                ing.id?.let { onIngredientClicked(it) } 
-                                            }
-                                            .padding(horizontal = 8.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = ing.displayName ?: ing.name ?: "Nieznany",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onBackground,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        
-                                        Box(
-                                            modifier = Modifier
-                                                .size(28.dp)
-                                                .background(badgeColor, CircleShape),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = level.toString(),
-                                                style = MaterialTheme.typography.labelMedium,
-                                                fontWeight = FontWeight.Bold,
-                                                color = badgeTextColor
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-    }
-}
-
-
-fun translateIngredientColor(apiHex: String, isDark: Boolean): Pair<Color, Color> {
-    return when (apiHex.uppercase()) {
-        "#D9F6E4" -> if (isDark) ingredient_dark_green to ingredient_dark_onGreen else ingredient_light_green to ingredient_light_onGreen
-        "#EBF3CC" -> if (isDark) ingredient_dark_yellow to ingredient_dark_onYellow else ingredient_light_yellow to ingredient_light_onYellow
-        "#FEEDD9" -> if (isDark) ingredient_dark_orange to ingredient_dark_onOrange else ingredient_light_orange to ingredient_light_onOrange
-        "#FFF3C4" -> if (isDark) ingredient_dark_red to ingredient_dark_onRed else ingredient_light_red to ingredient_light_onRed
-        else -> {
-            val bgColor = try {
-                Color(android.graphics.Color.parseColor(apiHex))
-            } catch (e: Exception) {
-                Color.Transparent
-            }
-            // For unknown colors, we use a fallback alpha and standard text color
-            if (isDark) {
-                bgColor.copy(alpha = 0.3f) to Color.White
-            } else {
-                bgColor.copy(alpha = 0.9f) to Color.Black
-            }
-        }
-    }
-}
-
-@Composable
-fun calculateRws(nutrientName: String, value: Double): Pair<Float, Color> {
-    // Reference values for an average adult (2000 kcal)
-    val rwsMap = mapOf(
-        "energetyczna" to 2000.0,
-        "energia" to 2000.0,
-        "kalorie" to 2000.0,
-        "tłuszcz" to 70.0,
-        "nasycone" to 20.0,
-        "węglowodany" to 260.0,
-        "cukry" to 90.0,
-        "białko" to 50.0,
-        "sól" to 6.0,
-        "błonnik" to 25.0
-    )
-
-    val lowerName = nutrientName.lowercase()
-    val rwsTarget = rwsMap.entries.firstOrNull { lowerName.contains(it.key) }?.value ?: return Pair(0f, MaterialTheme.colorScheme.primary)
-
-    val percentage = (value / rwsTarget).coerceIn(0.0, 1.0).toFloat()
-    
-    val isGoodNutrient = lowerName.contains("białko") || lowerName.contains("błonnik")
-    val isNeutral = lowerName.contains("energia") || lowerName.contains("kalorie") || lowerName.contains("węglowodany")
-    
-    val color = if (isGoodNutrient) {
-        Color(0xFF4CAF50) // Green
-    } else if (isNeutral) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        // Bad nutrients: fat, sugar, salt, saturated fat
-        when {
-            percentage < 0.33f -> Color(0xFF4CAF50) // Green
-            percentage < 0.66f -> Color(0xFFFFB300) // Yellow/Orange
-            else -> Color(0xFFE53935) // Red
-        }
-    }
-    
-    return Pair(percentage, color)
-}
-
-fun getNutrientValue(nutrients: List<Nutrient>, keywords: List<String>): String {
-    val nut = nutrients.firstOrNull { n ->
-        val name = n.name?.lowercase() ?: ""
-        keywords.any { name.contains(it) }
-    }
-    return if (nut != null) {
-        val value = nut.details?.value
-        val unit = nut.details?.unit ?: ""
-        if (value.isNullOrBlank()) "-" else "$value $unit".trim()
-    } else {
-        "-"
-    }
-}
-
-fun formatNutritionalValuesForCopy(product: ProductResponse): String {
-    val nutrients = product.nutrientValues?.nutrients ?: emptyList()
-    val perUnit = product.nutrientValues?.per100Unit ?: "g"
-    
-    val kalorie = getNutrientValue(nutrients, listOf("kalorie", "energia", "energetyczna"))
-    val tluszcz = getNutrientValue(nutrients, listOf("tłuszcz"))
-    val nasycone = getNutrientValue(nutrients, listOf("nasycone"))
-    val weglowodany = getNutrientValue(nutrients, listOf("węglowodany"))
-    val cukry = getNutrientValue(nutrients, listOf("cukry"))
-    val blonnik = getNutrientValue(nutrients, listOf("błonnik"))
-    val bialko = getNutrientValue(nutrients, listOf("białko"))
-    val sol = getNutrientValue(nutrients, listOf("sól"))
-
-    return """
-        Wartości odżywcze na 100$perUnit
-        Kalorie: $kalorie
-        Tłuszcz: $tluszcz
-        w tym kwasy nasycone: $nasycone
-        Węglowodany: $weglowodany
-        w tym cukry: $cukry
-        Błonnik: $blonnik
-        Białko: $bialko
-        Sól: $sol
-    """.trimIndent()
-}
-
-@Composable
-fun IngredientDetailsBottomSheet(uiState: IngredientUiState) {
-    when (uiState) {
-        is IngredientUiState.Idle -> {}
-        is IngredientUiState.Loading -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        }
-        is IngredientUiState.Success -> {
-            val ingredient = uiState.ingredient
-            val level = ingredient.harmfulLevel ?: 0
-            val isDarkTheme = isSystemInDarkTheme()
-            val (accentColor, textColor) = when (level) {
-                1 -> if (isDarkTheme) ingredient_dark_green to ingredient_dark_onGreen else ingredient_light_green to ingredient_light_onGreen
-                2 -> if (isDarkTheme) ingredient_dark_yellow to ingredient_dark_onYellow else ingredient_light_yellow to ingredient_light_onYellow
-                3 -> if (isDarkTheme) ingredient_dark_orange to ingredient_dark_onOrange else ingredient_light_orange to ingredient_light_onOrange
-                4, 5 -> if (isDarkTheme) ingredient_dark_red to ingredient_dark_onRed else ingredient_light_red to ingredient_light_onRed
-                else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
-            }
-
-            val harmfulText = when(level) {
-                1 -> "Korzystny wpływ na zdrowie"
-                2 -> "Neutralny wpływ na zdrowie"
-                3 -> "Podejrzany składnik"
-                4 -> "Szkodliwy składnik"
-                5 -> "Bardzo szkodliwy składnik"
-                else -> "Brak danych o szkodliwości"
-            }
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                contentPadding = PaddingValues(bottom = 48.dp)
-            ) {
-                item {
-                    Text(
-                        text = ingredient.displayName ?: ingredient.name ?: "Nieznany",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                
-                if (!ingredient.name.isNullOrBlank() && ingredient.name.startsWith("E", ignoreCase = true) && ingredient.name != ingredient.displayName) {
-                    item {
-                        Text(
-                            text = ingredient.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            modifier = Modifier.padding(top = 2.dp)
-                        )
-                    }
-                }
-
-                item { Spacer(modifier = Modifier.height(16.dp)) }
-
-                item {
-                    Surface(
-                        color = accentColor,
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = if (level >= 4) Icons.Default.Warning else Icons.Default.Info,
-                                contentDescription = null,
-                                tint = textColor,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = harmfulText,
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = textColor
-                            )
-                        }
-                    }
-                }
-
-                if (!ingredient.description.isNullOrBlank()) {
-                    item {
-                        Text(
-                            text = "Opis",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
-                        )
-                    }
-                    item {
-                        Text(
-                            text = ingredient.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                if (!ingredient.influence.isNullOrBlank()) {
-                    item {
-                        Text(
-                            text = "Wpływ na zdrowie",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
-                        )
-                    }
-                    item {
-                        Text(
-                            text = ingredient.influence,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
-        is IngredientUiState.Error -> {
-            pl.dakil.healthyshopping.ui.components.StandardError(
-                errorType = uiState.errorType,
-                customMessage = uiState.message,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 32.dp)
+        item(key = "hero") {
+            HeroCard(
+                product = product,
+                showScore = scoreHidden,
+                onImageClicked = onImageClicked,
+                modifier = Modifier.entrance(0),
             )
         }
+        sections.forEachIndexed { index, section ->
+            val entranceModifier = Modifier.fillMaxWidth()
+            when (section) {
+                DetailsSection.SCORE_CARD -> item(key = section.id) {
+                    ScoreCard(product, entranceModifier.entrance(index + 1))
+                }
+                DetailsSection.PRODUCT_TAGS -> {
+                    val tags = product.tags.orEmpty()
+                    if (display.productTags && tags.isNotEmpty()) item(key = section.id) {
+                        Section(section, entranceModifier.entrance(index + 1)) { TagsFlow(tags) }
+                    }
+                }
+                DetailsSection.NUTRITION_TABLE -> {
+                    val nutrients = product.nutrientValues?.nutrients.orEmpty()
+                    if (nutrients.isNotEmpty()) item(key = section.id) {
+                        val unit = product.nutrientValues?.per100Unit ?: "g"
+                        Section(
+                            section,
+                            entranceModifier.entrance(index + 1),
+                            title = stringResource(R.string.nutrition_per_100, unit),
+                            action = {
+                                CopyButton(stringResource(R.string.cd_copy_nutrition)) {
+                                    copy("Nutrition", formatNutritionForCopy(product, resources))
+                                }
+                            },
+                        ) { NutritionCard(product, display.nutritionBars) }
+                    }
+                }
+                DetailsSection.INGREDIENTS_LIST -> item(key = section.id) {
+                    Section(
+                        section,
+                        entranceModifier.entrance(index + 1),
+                        action = if (!product.description.isNullOrBlank()) {
+                            {
+                                CopyButton(stringResource(R.string.cd_copy_ingredients)) {
+                                    copy("Ingredients", product.description)
+                                }
+                            }
+                        } else null,
+                    ) { IngredientsCard(product, display.highlightedIngredients) }
+                }
+                DetailsSection.HARMFUL_INGREDIENTS -> {
+                    val ingredients = product.ingredients.orEmpty()
+                    if (ingredients.isNotEmpty()) item(key = section.id) {
+                        Section(section, entranceModifier.entrance(index + 1)) {
+                            HarmfulIngredients(ingredients, display.groupedIngredients, onIngredientClicked)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun UnverifiedBanner(title: String?, description: String?, modifier: Modifier = Modifier) {
+    Surface(
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Row(
+            Modifier.padding(Spacing.l),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ShapedIcon(
+                AppSymbols.Report,
+                polygon = MaterialShapes.Cookie9Sided,
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = MaterialTheme.colorScheme.onTertiary,
+            )
+            Column(Modifier.weight(1f)) {
+                Text(
+                    title ?: stringResource(R.string.details_unverified_default),
+                    style = MaterialTheme.typography.titleSmallEmphasized,
+                )
+                if (!description.isNullOrBlank()) {
+                    Text(description, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = Spacing.xxs))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeroCard(
+    product: ProductResponse,
+    showScore: Boolean,
+    onImageClicked: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Row(
+            Modifier.padding(Spacing.l),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.l),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val url = product.image?.url
+            Box {
+                ProductImage(
+                    url = url,
+                    shape = MaterialTheme.shapes.largeIncreased,
+                    contentDescription = stringResource(R.string.cd_product_photo),
+                    modifier = Modifier
+                        .size(112.dp)
+                        .then(if (url != null) Modifier.clickable { onImageClicked(url) } else Modifier),
+                )
+                if (url != null) {
+                    Box(
+                        Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(Spacing.xs)
+                            .size(28.dp)
+                            .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        AppIcon(
+                            AppSymbols.ZoomIn,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                }
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                Text(
+                    product.name ?: stringResource(R.string.product_unknown),
+                    style = MaterialTheme.typography.titleLargeEmphasized,
+                    modifier = Modifier.semantics { heading() },
+                )
+                product.category?.name?.let {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AppIcon(
+                            AppSymbols.Category,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Text(
+                            it,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = Spacing.xs),
+                        )
+                    }
+                }
+                product.ean?.let {
+                    Text(
+                        stringResource(R.string.details_ean, it),
+                        style = MaterialTheme.typography.labelMedium.tabular(),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            if (showScore) ScoreBadge(product.score, size = 52.dp, hero = true)
+        }
+    }
+}
+
+/** A titled block on the page: a small shaped icon, the title and an optional trailing action. */
+@Composable
+private fun Section(
+    section: DetailsSection,
+    modifier: Modifier = Modifier,
+    title: String = stringResource(section.labelRes()),
+    action: (@Composable () -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+        SectionTitle(title, section.symbol, action)
+        content()
+    }
+}
+
+@Composable
+private fun SectionTitle(title: String, symbol: AppSymbol, action: (@Composable () -> Unit)? = null) {
+    Row(
+        Modifier.fillMaxWidth().padding(start = Spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+    ) {
+        ShapedIcon(symbol, size = 32.dp, polygon = MaterialShapes.Cookie7Sided)
+        Text(
+            title,
+            style = MaterialTheme.typography.titleMediumEmphasized,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f).semantics { heading() },
+        )
+        action?.invoke()
+    }
+}
+
+@Composable
+private fun CopyButton(description: String, onClick: () -> Unit) {
+    IconButton(onClick = onClick, shapes = IconButtonDefaults.shapes()) {
+        AppIcon(AppSymbols.ContentCopy, contentDescription = description, tint = MaterialTheme.colorScheme.primary)
+    }
+}
+
+@Composable
+private fun ScoreCard(product: ProductResponse, modifier: Modifier = Modifier) {
+    val score = product.score
+    val scoreColor = parseHexColor(score?.color) ?: MaterialTheme.colorScheme.primary
+    Surface(
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = modifier,
+    ) {
+        Row(
+            Modifier.padding(Spacing.l),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.l),
+        ) {
+            ScoreBadge(score, size = 96.dp, hero = true)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                Text(
+                    stringResource(R.string.section_score),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    score?.label ?: stringResource(R.string.value_missing),
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                val value = score?.value
+                val max = score?.max
+                if (value != null && max != null && max > 0) {
+                    GrowingBar(value.toFloat() / max, scoreColor, Modifier.padding(top = Spacing.xs))
+                    Text(
+                        stringResource(R.string.details_score_of, value, max),
+                        style = MaterialTheme.typography.labelMedium.tabular(),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TagsFlow(tags: List<String>) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+        verticalArrangement = Arrangement.spacedBy(Spacing.s),
+    ) {
+        tags.forEach { tag ->
+            val info = tagInfo(tag)
+            val tone = info.tone?.tone()
+            Surface(
+                shape = CircleShape,
+                color = tone?.container ?: MaterialTheme.colorScheme.surfaceContainerHighest,
+                contentColor = tone?.content ?: MaterialTheme.colorScheme.onSurfaceVariant,
+            ) {
+                Row(
+                    Modifier.padding(start = Spacing.m, end = Spacing.l, top = Spacing.s, bottom = Spacing.s),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    AppIcon(
+                        when (info.tone) {
+                            HealthTone.GOOD -> AppSymbols.CheckCircle
+                            HealthTone.BAD -> AppSymbols.Warning
+                            else -> AppSymbols.Sell
+                        },
+                        contentDescription = null,
+                        filled = true,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Text(
+                        info.label?.let { stringResource(it) } ?: tag,
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(start = Spacing.s),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NutritionCard(product: ProductResponse, showBars: Boolean) {
+    val nutrients = product.nutrientValues?.nutrients.orEmpty()
+    Surface(
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.m)) {
+            nutrients.forEachIndexed { index, nutrient ->
+                val name = nutrient.name ?: stringResource(R.string.nutrient_unknown)
+                // Sub-rows ("w tym cukry") are indented under their parent.
+                val sub = name.trim().startsWith("w tym", ignoreCase = true)
+                val share = dailyShare(nutrientKindOf(name), parseNutrientNumber(nutrient.details?.value))
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(start = if (sub) Spacing.l else 0.dp, top = Spacing.s, bottom = Spacing.s),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            name,
+                            style = if (sub) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
+                            color = if (sub) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f),
+                        )
+                        CountUpText(
+                            nutrient.displayValue() ?: stringResource(R.string.value_missing_short),
+                            style = MaterialTheme.typography.titleSmallEmphasized,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                    if (showBars && share != null) {
+                        Row(
+                            Modifier.padding(top = Spacing.s),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            GrowingBar(
+                                share.fraction,
+                                share.tone?.accent() ?: MaterialTheme.colorScheme.primary,
+                                Modifier.weight(1f),
+                            )
+                            CountUpText(
+                                "${(share.fraction * 100).toInt()}%",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = Spacing.m).width(40.dp),
+                            )
+                        }
+                    }
+                }
+                if (index == nutrients.lastIndex && showBars) {
+                    Text(
+                        stringResource(R.string.details_gda_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = Spacing.s, bottom = Spacing.xs),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun IngredientsCard(product: ProductResponse, highlight: Boolean) {
+    val description = product.description
+    val phrases = product.ingredientPhrases.orEmpty()
+    // Resolve the highlight colors in composition: they follow the app's own dark mode.
+    val tones = phrases.map { phraseTone(it.backgroundColor) }
+    Surface(
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        if (description.isNullOrBlank()) {
+            Text(
+                stringResource(R.string.details_no_description),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(Spacing.l),
+            )
+            return@Surface
+        }
+        val text = buildAnnotatedString {
+            append(description)
+            if (highlight) {
+                phrases.forEachIndexed { i, info ->
+                    val phrase = info.phrase?.takeIf { it.isNotBlank() } ?: return@forEachIndexed
+                    val tone = tones[i]
+                    var start = description.indexOf(phrase, ignoreCase = true)
+                    while (start != -1) {
+                        addStyle(
+                            SpanStyle(background = tone.container, color = tone.content, fontWeight = FontWeight.Medium),
+                            start,
+                            start + phrase.length,
+                        )
+                        start = description.indexOf(phrase, start + phrase.length, ignoreCase = true)
+                    }
+                }
+            }
+        }
+        Text(
+            text,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(Spacing.l),
+        )
+    }
+}
+
+@Composable
+private fun HarmfulIngredients(
+    ingredients: List<Ingredient>,
+    grouped: Boolean,
+    onIngredientClicked: (Int) -> Unit,
+) {
+    if (!grouped) {
+        IngredientGroup(ingredients, showLevel = true, onIngredientClicked)
+        return
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+        ingredients
+            .groupBy { it.harmfulLevel ?: 0 }
+            .toSortedMap(compareByDescending { it })
+            .forEach { (level, items) ->
+                val info = harmLevel(level)
+                val tone = info.toneOrNeutral()
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                    Row(
+                        Modifier.padding(start = Spacing.xs),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                    ) {
+                        Text(
+                            stringResource(info.groupLabel),
+                            style = MaterialTheme.typography.labelLargeEmphasized,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Surface(shape = CircleShape, color = tone.container, contentColor = tone.content) {
+                            Text(
+                                items.size.toString(),
+                                style = MaterialTheme.typography.labelMedium.tabular(),
+                                modifier = Modifier.padding(horizontal = Spacing.s, vertical = Spacing.xxs),
+                            )
+                        }
+                    }
+                    IngredientGroup(items, showLevel = false, onIngredientClicked)
+                }
+            }
+    }
+}
+
+/** Ingredients as one segmented card; each tile's shaped icon carries its harm level's tone. */
+@Composable
+private fun IngredientGroup(
+    ingredients: List<Ingredient>,
+    showLevel: Boolean,
+    onIngredientClicked: (Int) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap)) {
+        ingredients.forEachIndexed { index, ingredient ->
+            val info = harmLevel(ingredient.harmfulLevel)
+            val tone = info.toneOrNeutral()
+            val id = ingredient.id
+            val leading: @Composable () -> Unit = {
+                ShapedIcon(
+                    info.symbol,
+                    polygon = MaterialShapes.Cookie9Sided,
+                    containerColor = tone.container,
+                    contentColor = tone.content,
+                )
+            }
+            val supporting: (@Composable () -> Unit)? = if (showLevel) {
+                { Text(stringResource(info.groupLabel)) }
+            } else null
+            val name = ingredient.displayName ?: ingredient.name ?: stringResource(R.string.ingredient_unknown)
+            val shapes = ListItemDefaults.segmentedShapes(index, ingredients.size)
+            if (id != null) {
+                SegmentedListItem(
+                    onClick = { onIngredientClicked(id) },
+                    shapes = shapes,
+                    colors = segmentedItemColors(),
+                    leadingContent = leading,
+                    supportingContent = supporting,
+                    trailingContent = {
+                        AppIcon(AppSymbols.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    },
+                ) { Text(name) }
+            } else {
+                SegmentedListItem(
+                    shapes = shapes,
+                    colors = segmentedItemColors(),
+                    leadingContent = leading,
+                    supportingContent = supporting,
+                ) { Text(name) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun IngredientSheet(state: IngredientUiState, onDismiss: () -> Unit) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberBottomSheetState(
+            initialValue = SheetValue.Hidden,
+            enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
+        ),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        val fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+        val fadeOutSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+        AnimatedContent(
+            targetState = state,
+            contentKey = { it::class },
+            transitionSpec = { fadeIn(fadeInSpec) togetherWith fadeOut(fadeOutSpec) },
+            label = "ingredient",
+        ) { current ->
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = Spacing.xl)
+                    .padding(bottom = Spacing.xl),
+                verticalArrangement = Arrangement.spacedBy(Spacing.l),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                when (current) {
+                    is IngredientUiState.Idle -> Unit
+                    is IngredientUiState.Loading -> LoadingIndicator(Modifier.padding(vertical = Spacing.xxl).size(64.dp))
+                    is IngredientUiState.Error -> ErrorState(current.errorType)
+                    is IngredientUiState.Success -> IngredientDetails(current.ingredient)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun IngredientDetails(ingredient: IngredientResponse) {
+    val info = harmLevel(ingredient.harmfulLevel)
+    val tone = info.toneOrNeutral()
+    val title = ingredient.displayName ?: ingredient.name ?: stringResource(R.string.ingredient_unknown)
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.l)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
+            ShapedIcon(
+                info.symbol,
+                polygon = MaterialShapes.Cookie9Sided,
+                size = 56.dp,
+                containerColor = tone.container,
+                contentColor = tone.content,
+            )
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.headlineSmallEmphasized)
+                val code = ingredient.name
+                if (code != null && code != ingredient.displayName && code.startsWith("E", ignoreCase = true)) {
+                    Text(code, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        Surface(shape = CircleShape, color = tone.container, contentColor = tone.content) {
+            Text(
+                stringResource(info.description),
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s),
+            )
+        }
+        ingredient.description?.takeIf { it.isNotBlank() }?.let {
+            SheetParagraph(stringResource(R.string.ingredient_description), it)
+        }
+        ingredient.influence?.takeIf { it.isNotBlank() }?.let {
+            SheetParagraph(stringResource(R.string.ingredient_influence), it)
+        }
+    }
+}
+
+@Composable
+private fun SheetParagraph(title: String, body: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        Text(title, style = MaterialTheme.typography.labelLargeEmphasized, color = MaterialTheme.colorScheme.primary)
+        Text(body, style = MaterialTheme.typography.bodyMedium)
     }
 }

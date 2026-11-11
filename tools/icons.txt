@@ -1,0 +1,92 @@
+# Material Symbols Rounded used by HealthyShopping, one name per line.
+# The only way an icon enters the app: add a name here and rerun
+#   python3 -I tools/fetch-icons.py
+
+# Common actions
+add
+arrow_forward
+arrow_back
+arrow_downward
+arrow_drop_down
+arrow_upward
+check
+chevron_right
+close
+content_copy
+delete
+delete_sweep
+drag_indicator
+keyboard_arrow_down
+keyboard_arrow_up
+more_horiz
+open_in_new
+refresh
+search
+share
+sort
+visibility
+visibility_off
+
+# Navigation
+compare_arrows
+home
+
+# Scanning & products
+barcode_scanner
+flashlight_off
+flashlight_on
+image
+image_not_supported
+pin
+qr_code_scanner
+shopping_basket
+zoom_in
+
+# Home (meal-time greeting)
+bakery_dining
+bedtime
+dinner_dining
+egg_alt
+ramen_dining
+tips_and_updates
+
+# Product details
+add_chart
+category
+check_circle
+dangerous
+eco
+emoji_events
+health_and_safety
+help
+lightbulb
+nutrition
+receipt_long
+report
+science
+sell
+warning
+
+# States
+cloud_off
+error
+search_off
+touch_app
+
+# Settings
+animation
+brightness_auto
+code
+contrast
+dark_mode
+history
+info
+light_mode
+linear_scale
+manage_search
+palette
+person
+pin_drop
+star
+tune
+vibration

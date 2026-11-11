@@ -47,6 +47,11 @@ enum class SearchAutoFocusOption {
     NEVER, EMPTY_FIELD, ALWAYS
 }
 
+/** How progress bars are drawn (Feel settings). */
+enum class ProgressStyle {
+    WAVY, STRAIGHT
+}
+
 class SettingsRepository(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("settings_prefs", Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true }
@@ -171,6 +176,44 @@ class SettingsRepository(context: Context) {
         SearchAutoFocusOption.valueOf(prefs.getString("search_auto_focus_option", SearchAutoFocusOption.EMPTY_FIELD.name) ?: SearchAutoFocusOption.EMPTY_FIELD.name)
     )
     val searchAutoFocusOption: StateFlow<SearchAutoFocusOption> = _searchAutoFocusOption.asStateFlow()
+
+    // Feel settings ("Wrażenia") — same keys and defaults as the author's other apps.
+    private val _hapticsEnabled = MutableStateFlow(prefs.getBoolean("haptics_enabled", true))
+    val hapticsEnabled: StateFlow<Boolean> = _hapticsEnabled.asStateFlow()
+
+    /** Live numbers roll their changing digits; off, they just change. */
+    private val _animatedNumbers = MutableStateFlow(prefs.getBoolean("animated_numbers", true))
+    val animatedNumbers: StateFlow<Boolean> = _animatedNumbers.asStateFlow()
+
+    /** Spins, shape morphs and cascades as content appears; screen transitions are not affected. */
+    private val _decorativeAnimations = MutableStateFlow(prefs.getBoolean("decorative_animations", true))
+    val decorativeAnimations: StateFlow<Boolean> = _decorativeAnimations.asStateFlow()
+
+    private val _progressStyle = MutableStateFlow(
+        runCatching { ProgressStyle.valueOf(prefs.getString("progress_style", null)!!) }
+            .getOrDefault(ProgressStyle.WAVY)
+    )
+    val progressStyle: StateFlow<ProgressStyle> = _progressStyle.asStateFlow()
+
+    fun setHapticsEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("haptics_enabled", enabled).apply()
+        _hapticsEnabled.value = enabled
+    }
+
+    fun setAnimatedNumbers(enabled: Boolean) {
+        prefs.edit().putBoolean("animated_numbers", enabled).apply()
+        _animatedNumbers.value = enabled
+    }
+
+    fun setDecorativeAnimations(enabled: Boolean) {
+        prefs.edit().putBoolean("decorative_animations", enabled).apply()
+        _decorativeAnimations.value = enabled
+    }
+
+    fun setProgressStyle(style: ProgressStyle) {
+        prefs.edit().putString("progress_style", style.name).apply()
+        _progressStyle.value = style
+    }
 
     fun setColorTheme(theme: AppColorTheme) {
         prefs.edit().putString("color_theme", theme.name).apply()
